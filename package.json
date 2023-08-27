@@ -13,6 +13,10 @@
 		"url": "git+https://github.com/autosec-network/FetchHole.git"
 	},
 	"author": "Autosec",
+	"contributors": [
+		"Sam Gammon <sam@elide.dev>",
+		"DemosJarco <1209494+demosjarco@users.noreply.github.com>"
+	],
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/autosec-network/FetchHole/issues"

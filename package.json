@@ -1,0 +1,25 @@
+{
+	"name": "fetchhole",
+	"version": "0.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/autosec-network/FetchHole.git"
+	},
+	"author": "Autosec",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/autosec-network/FetchHole/issues"
+	},
+	"homepage": "https://github.com/autosec-network/FetchHole#readme",
+	"prettier": "@demosjarco/prettier-config",
+	"devDependencies": {
+		"@demosjarco/prettier-config": "^1.0.0",
+		"prettier": "^3.0.2",
+		"typescript": "^5.2.2"
+	}
+}

@@ -1,0 +1,23 @@
+name: Publish
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@v2.5.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - uses: actions/checkout@v3.6.0
+      - uses: actions/setup-node@v3.8.1
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

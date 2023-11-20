@@ -24,7 +24,7 @@
 	"homepage": "https://github.com/autosec-network/FetchHole#readme",
 	"prettier": "@demosjarco/prettier-config",
 	"engines": {
-		"node": ">=18.0.0"
+		"node": ">=16.15.0"
 	},
 	"dependencies": {
 		"chalk": "^5.3.0"

@@ -6,7 +6,7 @@
 	"main": "./dist/index.mjs",
 	"scripts": {
 		"build": "tsc",
-		"build:watch": "npm run build -- --incremental --watch"
+		"build:watch": "npm run build -- --watch"
 	},
 	"repository": {
 		"type": "git",

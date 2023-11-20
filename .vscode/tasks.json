@@ -11,7 +11,7 @@
 		},
 		{
 			"label": "build",
-			"detail": "tsc --incremental --watch",
+			"detail": "tsc --watch",
 			"type": "npm",
 			"script": "build:watch",
 			"presentation": {

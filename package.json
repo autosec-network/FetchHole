@@ -1,5 +1,5 @@
 {
-	"name": "fetchhole",
+	"name": "@autosec/fetchhole",
 	"version": "0.0.0",
 	"description": "",
 	"type": "module",

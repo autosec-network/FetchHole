@@ -1,4 +1,4 @@
-import { type DohErrorResponse, type DohSuccessfulResponse } from './types.mjs';
+import type { DohErrorResponse, DohSuccessfulResponse } from './types.js';
 
 export class DohResolver {
 	private nameserver_url: URL;

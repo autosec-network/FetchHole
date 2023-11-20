@@ -1,6 +1,6 @@
 {
 	"name": "@autosec/fetchhole",
-	"version": "0.0.0",
+	"version": "0.0.1-dependabot/npm_and_yarn/nightly/code-management-c8761362db.0",
 	"description": "",
 	"type": "module",
 	"main": "./dist/index.mjs",

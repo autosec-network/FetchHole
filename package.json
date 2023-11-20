@@ -4,6 +4,7 @@
 	"description": "",
 	"type": "module",
 	"main": "./dist/index.mjs",
+	"types": "./dist/index.d.mts",
 	"scripts": {
 		"build": "tsc",
 		"build:watch": "npm run build -- --watch"
@@ -40,7 +41,8 @@
 	},
 	"imports": {
 		".": {
-			"default": "./dist/index.mjs"
+			"default": "./dist/index.mjs",
+			"types": "./dist/index.d.mts"
 		}
 	}
 }

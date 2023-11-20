@@ -89,6 +89,7 @@ jobs:
     permissions:
       contents: write
     outputs:
+      npm-version-new-tag: ${{ steps.npm-version.outputs.NEW_TAG }}
       commit_sha: ${{ steps.tag_sha.outputs.commit_sha }}
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
@@ -107,7 +108,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-      - run: npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }}
+      - run: echo "NEW_TAG=$(npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
+        id: npm-version
       - run: git push --follow-tags
       - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         id: tag_sha

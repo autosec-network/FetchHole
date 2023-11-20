@@ -24,7 +24,7 @@ export interface StreamableResponse extends Response {
 
 export class FetchHole {
 	private memCache = new MemoryCache();
-	private diskCache?: CacheStorage;
+	// private diskCache?: CacheStorage;
 
 	/** Effective configuration. */
 	private config: FetchHoleConfig;

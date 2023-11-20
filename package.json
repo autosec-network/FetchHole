@@ -26,6 +26,9 @@
 	"engines": {
 		"node": ">=16.15.0"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"dependencies": {
 		"chalk": "^5.3.0"
 	},

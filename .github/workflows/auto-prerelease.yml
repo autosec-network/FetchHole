@@ -4,14 +4,13 @@ on:
   push:
     branches-ignore:
       - latest
+      # Ignore any branch with `/`
+      - '*/**'
     paths:
       - '.github/workflows/compile.yml'
       - 'src/**'
       - 'package*.json'
       - 'tsconfig.json'
-  pull_request:
-    branches-ignore:
-      - '**'
   workflow_dispatch:
     inputs:
       semver:

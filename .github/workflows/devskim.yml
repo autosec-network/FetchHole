@@ -14,9 +14,6 @@ on:
 jobs:
   lint:
     name: DevSkim
-    environment:
-      name: ${{ github.base_ref || github.ref_name }}
-      # url: ${{ github.server_url }}/${{ github.repository }}/security/code-scanning?query=is%3Aopen+tool%3Aantimalware
     runs-on: ubuntu-latest
     permissions:
       actions: read

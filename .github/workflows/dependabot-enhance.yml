@@ -1,0 +1,42 @@
+name: Auto Dependabot
+on: pull_request
+
+jobs:
+  enhance:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+      issues: write
+      repository-projects: write
+    steps:
+      - uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34 # v1.5.0
+        with:
+          egress-policy: audit
+      - uses: dependabot/fetch-metadata@c9c4182bf1b97f5224aee3906fd373f6b61b4526 # v1.6.0
+        id: dependabot-metadata
+      - run: echo "SEMVER_UPDATE=$(echo "${{ steps.dependabot-metadata.outputs.update-type }}" | cut -d':' -f2)" >> "$GITHUB_OUTPUT"
+        id: dependabot-metadata-update-type
+      - run: gh pr edit "${{ github.event.pull_request.html_url }}" --add-label "${{ steps.dependabot-metadata-update-type.outputs.SEMVER_UPDATE }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+  automate:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34 # v1.5.0
+        with:
+          egress-policy: audit
+      - uses: dependabot/fetch-metadata@c9c4182bf1b97f5224aee3906fd373f6b61b4526 # v1.6.0
+        id: dependabot-metadata
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      - run: gh pr checkout "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
+        if: steps.dependabot-metadata.outputs.dependency-group == 'typescript-types' || steps.dependabot-metadata.outputs.dependency-group == 'code-management'
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 999
-    target-branch: 'beta'
+    target-branch: 'nightly'
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
@@ -19,7 +19,7 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 999
-    target-branch: 'latest'
+    target-branch: 'beta'
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-patch']
@@ -28,7 +28,7 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 999
-    target-branch: 'beta'
+    target-branch: 'nightly'
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-patch']
@@ -51,7 +51,7 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 999
-    target-branch: 'latest'
+    target-branch: 'beta'
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']

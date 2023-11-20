@@ -19,7 +19,7 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 999
-    target-branch: 'stable'
+    target-branch: 'latest'
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-patch']
@@ -51,7 +51,7 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 999
-    target-branch: 'stable'
+    target-branch: 'latest'
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']

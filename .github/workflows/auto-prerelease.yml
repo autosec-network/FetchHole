@@ -12,6 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       semver:
+        required: true
         default: 'warning'
         type: choice
         options:

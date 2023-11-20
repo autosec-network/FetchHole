@@ -1,0 +1,70 @@
+name: Auto Publish Prerelease
+
+on:
+  workflow_run:
+    workflows:
+      - 'Test'
+    branches-ignore:
+      - latest
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      npm-version-new-tag: ${{ steps.npm-version.outputs.NEW_TAG }}
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0 # Important to fetch all history for versioning
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+      - name: Git Setup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - run: echo "NEW_TAG=$(npm version prerelease --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
+        id: npm-version
+      - run: git push --follow-tags
+  release:
+    needs: tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      # Needs to be re-uploaded so the the next workflows don't break
+      - uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2.28.0
+        with:
+          workflow: ${{ steps.last_workflow.outputs.workflow_name }}
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: dist
+          path: ${{ github.workspace }}/dist
+          if-no-files-found: error
+      - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        with:
+          prerelease: true
+          files: |
+            ${{ github.workspace }}/dist
+          tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

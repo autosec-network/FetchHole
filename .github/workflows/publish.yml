@@ -18,12 +18,19 @@ jobs:
           disable-sudo: true
           egress-policy: audit
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      - name: Get Branch Name from Tag
+        id: get-branch
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          COMMIT_SHA=$(git rev-list -n 1 $TAG_NAME)
+          BRANCH_NAME=$(gh api repos/${{ github.repository }}/commits/$COMMIT_SHA/branches-where-head --jq '.[0].name')
+          echo "NPM_TAG::$BRANCH_NAME" >> $GITHUB_OUTPUT
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:
           node-version: lts/*
           check-latest: true
           cache: npm
           registry-url: 'https://registry.npmjs.org'
-      - run: npm publish --provenance
+      - run: npm publish --tag ${{ steps.get-branch.outputs.NPM_TAG }} --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

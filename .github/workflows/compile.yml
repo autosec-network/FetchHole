@@ -26,7 +26,6 @@ jobs:
           node-version: lts/*
           check-latest: true
           cache: npm
-          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
         with:

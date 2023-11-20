@@ -1,0 +1,33 @@
+name: Delete Release
+
+on:
+  release:
+    types:
+      - deleted
+
+jobs:
+  manage-npm-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      - run: echo "PACKAGE_NAME=$(jq -r '.name' package.json)" >> $GITHUB_OUTPUT
+        id: pkg-name
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm unpublish ${{ steps.pkg-name.outputs.PACKAGE_NAME }}@"${{ github.event.release.tag_name }}"
+        id: unpublish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+      - run: npm deprecate ${{ steps.pkg-name.outputs.PACKAGE_NAME }}@"${{ github.event.release.tag_name }}" "This version has been deprecated due to removal of corresponding GitHub release"
+        if: steps.unpublish.outcome == 'failure'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

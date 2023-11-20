@@ -32,6 +32,8 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-patch']
+      - dependency-name: 'node'
+        versions: '>= 21'
     groups:
       typescript-core:
         patterns:
@@ -53,6 +55,8 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'node'
+        versions: '>= 21'
     groups:
       typescript-core:
         patterns:

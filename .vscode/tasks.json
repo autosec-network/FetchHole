@@ -7,7 +7,8 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"isBackground": true
 		},
 		{
 			"label": "build",
@@ -16,7 +17,8 @@
 			"script": "build:watch",
 			"presentation": {
 				"group": "compile"
-			}
+			},
+			"isBackground": true
 		}
 	]
 }

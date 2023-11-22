@@ -105,7 +105,7 @@ jobs:
       - name: Find test files
         id: find-tests
         run: |
-          $files = Get-ChildItem ./test -Recurse -Filter '*.test.*ts' | Resolve-Path -Relative | ForEach-Object { $_.Path.Replace('./','').Replace('/', '\') } -join ' '
+          $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | Resolve-Path -Relative | ForEach-Object { $_.Path.Replace('./','').Replace('/', '\') } -join ' '
           echo "Found files: $files"
           echo "test-files=$files" >> $GITHUB_OUTPUT
         shell: pwsh

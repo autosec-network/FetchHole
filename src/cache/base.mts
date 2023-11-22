@@ -1,17 +1,22 @@
 import { createHash } from 'node:crypto';
 
 export abstract class CacheBase {
-	protected async hashRequestBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = 'sha512') {
+	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = 'sha512'): Promise<string> {
 		const hash = createHash(hashAlgorithm);
 		hash.update(Buffer.from(await request.arrayBuffer()));
 		return hash.digest('hex');
 	}
 
-	protected async areRequestsEqual(cachedRequest: Request, newRequest: Request, ignoreMethod: boolean = false): Promise<boolean> {
+	protected async areFetchesEqual(cachedFetch: Request | Response, newFetch: Request | Response, ignoreMethod: boolean = false): Promise<boolean> {
 		// Check if the request URL and method are the same
 		// When `ignoreMethod` is `true`, the request is considered to be a `GET` request regardless of its actual value
-		if (cachedRequest.url !== newRequest.url || cachedRequest.method !== (ignoreMethod ? 'GET' : newRequest.method)) {
+		if (cachedFetch.url !== newFetch.url) {
 			return false;
+		}
+		if ('method' in cachedFetch && 'method' in newFetch) {
+			if (cachedFetch.url !== newFetch.url || cachedFetch.method !== (ignoreMethod ? 'GET' : newFetch.method)) {
+				return false;
+			}
 		}
 
 		// Check if the request headers are the same
@@ -26,7 +31,7 @@ export abstract class CacheBase {
 		}
 
 		// Check if the request body is the same
-		const [body1hash, body2hash] = await Promise.all([this.hashRequestBody(cachedRequest), this.hashRequestBody(newRequest)]);
+		const [body1hash, body2hash] = await Promise.all([this.hashBody(cachedFetch), this.hashBody(newFetch)]);
 		if (body1hash !== body2hash) {
 			return false;
 		}

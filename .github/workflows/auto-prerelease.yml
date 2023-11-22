@@ -66,11 +66,30 @@ jobs:
           name: dist
           path: ${{ github.workspace }}/dist
           if-no-files-found: error
+  prepare-test:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Find test files
+        id: set-matrix
+        run: |
+          files=$(find ./test -iname '*.test.*' -printf '"%P",')
+          files="[${files%,}]"
+          echo "Found files: $files"
+          echo "matrix=${files}" >> $GITHUB_OUTPUT
   test:
-    needs: build
+    needs: [build, prepare-test]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        test: ${{ fromJson(needs.prepare-test.outputs.matrix) }}
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
         with:
@@ -84,7 +103,7 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      # TODO: actually test
+      - run: npm run test -- ${{ matrix.test }}
   tag:
     needs: test
     runs-on: ubuntu-latest

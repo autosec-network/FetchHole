@@ -1,5 +1,5 @@
 export class MemoryCache {
-	protected cache = new Map<string, Map<Request, Response>>();
+	protected cache = new Map<Request['url'], Map<Request, Response>>();
 
 	private async areRequestsEqual(cachedRequest: Request, newRequest: Request, ignoreMethod: boolean = false): Promise<boolean> {
 		// Check if the request URL and method are the same

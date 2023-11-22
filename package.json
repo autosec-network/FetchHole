@@ -1,6 +1,6 @@
 {
 	"name": "@autosec/fetchhole",
-	"version": "0.0.1-nightly.7",
+	"version": "0.0.1-nightly.8",
 	"description": "",
 	"type": "module",
 	"main": "./dist/index.mjs",

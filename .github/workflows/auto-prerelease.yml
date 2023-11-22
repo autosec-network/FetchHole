@@ -79,7 +79,7 @@ jobs:
       - name: Find test files
         id: set-matrix
         run: |
-          files=$(find ./test -iname '*.test.*' -printf '"%P",')
+          files=$(find ./test -iname '*.test.*ts' -printf '"%P",')
           files="[${files%,}]"
           echo "Found files: $files"
           echo "matrix=${files}" >> $GITHUB_OUTPUT

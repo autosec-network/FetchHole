@@ -88,10 +88,14 @@ jobs:
           name: dist
           path: ${{ github.workspace }}/dist
           if-no-files-found: error
-  prepare-test:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        version: [lts/*, latest]
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
         with:
@@ -99,33 +103,19 @@ jobs:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Find test files
-        id: set-matrix
+        id: find-tests
         run: |
-          files=$(find ./test -iname '*.test.*ts' -exec realpath --relative-to=${{ github.workspace }} '{}' \; | xargs -I {} printf '"%s",' {})
-          files="[${files%,}]"
+          files=$(find ./test -iname '*.test.*ts' -exec realpath --relative-to=${{ github.workspace }} '{}' \; | xargs)
           echo "Found files: $files"
-          echo "matrix=${files}" >> $GITHUB_OUTPUT
-  test:
-    needs: [build, prepare-test]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test: ${{ fromJson(needs.prepare-test.outputs.matrix) }}
-    steps:
-      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-        with:
-          disable-sudo: true
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+          echo "test-files=${files}" >> $GITHUB_OUTPUT
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:
-          node-version: lts/*
+          node-version: ${{ matrix.version }}
           check-latest: true
           cache: npm
       - run: npm ci
-      - run: npm run test -- ${{ matrix.test }}
+      - run: npm test -- ${{ steps.find-tests.outputs.test-files }}
   tag:
     needs: [detect, test]
     if: needs.detect.outputs.pr == 'none'

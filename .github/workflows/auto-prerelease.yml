@@ -10,6 +10,15 @@ on:
       - 'test/**'
       - 'package*.json'
       - 'tsconfig.json'
+  pull_request:
+    branches-ignore:
+      - latest
+    paths:
+      - '.github/workflows/auto-prerelease.yml'
+      - 'src/**'
+      - 'test/**'
+      - 'package*.json'
+      - 'tsconfig.json'
   workflow_dispatch:
     inputs:
       semver:
@@ -128,7 +137,7 @@ jobs:
       - run: npm run test -- ${{ matrix.test }}
   tag:
     needs: [detect, test]
-    if: needs.detect.outputs.pr == 'none'
+    if: github.event_name == 'push' && needs.detect.outputs.pr == 'none'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -159,7 +168,7 @@ jobs:
         id: tag_sha
   release:
     needs: [detect, tag]
-    if: needs.detect.outputs.pr == 'none'
+    if: github.event_name == 'push' && needs.detect.outputs.pr == 'none'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -183,7 +192,7 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
     needs: [detect, tag, release]
-    if: needs.detect.outputs.pr == 'none'
+    if: github.event_name == 'push' && needs.detect.outputs.pr == 'none'
     runs-on: ubuntu-latest
     permissions:
       contents: read

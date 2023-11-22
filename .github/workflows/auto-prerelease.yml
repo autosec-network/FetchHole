@@ -105,9 +105,10 @@ jobs:
       - name: Find test files
         id: find-tests
         run: |
-          $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | Resolve-Path -Relative | ForEach-Object { $_.Path.Replace('./','').Replace('/', '\') } -join ' '
-          echo "Found files: $files"
-          echo "test-files=$files" >> $GITHUB_OUTPUT
+          $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | Resolve-Path -Relative | ForEach-Object { $_.Path.Replace('./','').Replace('/', '\') }
+          $fileString = $files -join ' '
+          echo "Found files: $fileString"
+          echo "test-files=$fileString" >> $GITHUB_OUTPUT
         shell: pwsh
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0

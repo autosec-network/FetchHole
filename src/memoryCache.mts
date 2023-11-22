@@ -22,8 +22,7 @@ export class MemoryCache {
 		}
 
 		// Check if the request body is the same
-		const body1 = await cachedRequest.text();
-		const body2 = await newRequest.text();
+		const [body1, body2] = await Promise.all([cachedRequest.text(), newRequest.text()]);
 		if (body1 !== body2) {
 			return false;
 		}

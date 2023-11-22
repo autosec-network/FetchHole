@@ -108,6 +108,7 @@ jobs:
           files=$(find ./test -iname '*.test.*ts' -exec realpath --relative-to=${{ github.workspace }} '{}' \; | xargs)
           echo "Found files: $files"
           echo "test-files=${files}" >> $GITHUB_OUTPUT
+        shell: bash
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:

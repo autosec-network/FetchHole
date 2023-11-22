@@ -27,6 +27,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      pr: ${{ steps.check_pr.outputs.PR_NUMBER }}
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Check if commit is part of a PR
+        id: check_pr
+        run: |
+          PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number --jq '.[0].number // empty' --repo ${{ github.repository }})
+
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "This commit is a direct push to a branch."
+            echo "PR_NUMBER=none" >> $GITHUB_OUTPUT
+          else
+            echo "This commit is part of PR #$PR_NUMBER."
+            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
   build:
     runs-on: ubuntu-latest
     steps:
@@ -108,7 +129,8 @@ jobs:
       - run: npm ci
       - run: npm run test -- ${{ matrix.test }}
   tag:
-    needs: test
+    needs: [detect, test]
+    if: needs.detect.outputs.pr == 'none'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -138,7 +160,8 @@ jobs:
       - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         id: tag_sha
   release:
-    needs: tag
+    needs: [detect, tag]
+    if: needs.detect.outputs.pr == 'none'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -161,7 +184,8 @@ jobs:
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
-    needs: [tag, release]
+    needs: [detect, tag, release]
+    if: needs.detect.outputs.pr == 'none'
     runs-on: ubuntu-latest
     permissions:
       contents: read

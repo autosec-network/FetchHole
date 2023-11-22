@@ -15,10 +15,8 @@ export abstract class CacheBase {
 		}
 
 		// Check if the request headers are the same
-		// @ts-ignore
-		const headers1 = cachedRequest.headers.entries();
-		// @ts-ignore
-		const headers2 = newRequest.headers.entries();
+		const headers1 = cachedFetch.headers.entries();
+		const headers2 = newFetch.headers.entries();
 
 		for (const [name1, value1] of headers1) {
 			const [name2, value2] = headers2.next().value;

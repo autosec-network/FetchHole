@@ -1,5 +1,13 @@
+import { createHash } from 'node:crypto';
+
 export class MemoryCache {
 	protected cache = new Map<Request['url'], Map<Request, Response>>();
+
+	private async hashRequestBody(request: Request, hashAlgorithm: Parameters<typeof createHash>[0] = 'sha512') {
+		const hash = createHash(hashAlgorithm);
+		hash.update(Buffer.from(await request.arrayBuffer()));
+		return hash.digest('hex');
+	}
 
 	private async areRequestsEqual(cachedRequest: Request, newRequest: Request, ignoreMethod: boolean = false): Promise<boolean> {
 		// Check if the request URL and method are the same
@@ -22,8 +30,8 @@ export class MemoryCache {
 		}
 
 		// Check if the request body is the same
-		const [body1, body2] = await Promise.all([cachedRequest.text(), newRequest.text()]);
-		if (body1 !== body2) {
+		const [body1hash, body2hash] = await Promise.all([this.hashRequestBody(cachedRequest), this.hashRequestBody(newRequest)]);
+		if (body1hash !== body2hash) {
 			return false;
 		}
 

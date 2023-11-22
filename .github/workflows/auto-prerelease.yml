@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/auto-prerelease.yml'
       - 'src/**'
+      - 'test/**'
       - 'package*.json'
       - 'tsconfig.json'
   workflow_dispatch:

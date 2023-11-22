@@ -48,6 +48,8 @@ jobs:
             echo "This commit is part of PR #$PR_NUMBER."
             echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
           fi
+        env:
+          GH_TOKEN: ${{ github.token }}
   build:
     runs-on: ubuntu-latest
     steps:

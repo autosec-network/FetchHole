@@ -20,6 +20,24 @@
 			},
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true
+		},
+		{
+			"label": "TS Test",
+			"dependsOn": ["memoryCache"],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"isBackground": true
+		},
+		{
+			"label": "memoryCache",
+			"type": "npm",
+			"script": "test -- --watch ./test/memoryCache.test.mts",
+			"isBackground": true,
+			"group": {
+				"kind": "test"
+			}
 		}
 	]
 }

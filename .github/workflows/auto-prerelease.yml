@@ -163,7 +163,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
       - run: echo "NEW_TAG=$(npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
         id: npm-version
-      # - run: git push --follow-tags
+      - run: git push --follow-tags
       - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
         id: tag_sha
   release:
@@ -177,19 +177,19 @@ jobs:
         with:
           disable-sudo: true
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-      # - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
       - run: zip -r ${{ github.workspace }}/dist.zip ${{ github.workspace }}/dist LICENSE README.md
-      # - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-      #   with:
-      #     prerelease: true
-      #     files: |
-      #       ${{ github.workspace }}/dist.zip
-      #     tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
-      #     fail_on_unmatched_files: true
-      #     generate_release_notes: true
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        with:
+          prerelease: true
+          files: |
+            ${{ github.workspace }}/dist.zip
+          tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
     needs: [detect, tag, release]
     if: github.event_name == 'push' && needs.detect.outputs.pr == 'none'
@@ -203,8 +203,8 @@ jobs:
           disable-sudo: true
           egress-policy: audit
       - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-        # with:
-        #   ref: ${{ needs.tag.outputs.commit_sha }}
+        with:
+          ref: ${{ needs.tag.outputs.commit_sha }}
       - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:
@@ -212,6 +212,6 @@ jobs:
           check-latest: true
           cache: npm
           registry-url: 'https://registry.npmjs.org'
-      # - run: npm publish --tag ${{ github.ref_name }} --provenance
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npm publish --tag ${{ github.ref_name }} --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

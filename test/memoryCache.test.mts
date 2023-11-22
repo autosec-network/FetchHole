@@ -28,19 +28,37 @@ class RandomResponseGenerator {
 		return this.generateRandomString(length).substring(0, length);
 	}
 
-	private static generateRandomJson(totalLength: number): Record<string, string> {
-		const jsonObject: Record<string, string> = {};
+	/**
+	 * Generates a random JSON object with multiple properties and possible nested objects.
+	 *
+	 * @param {number} totalLength - The total length of all random strings to be generated.
+	 * @param {number} [maxDepth=1000] - The maximum depth of nesting.
+	 * @param {number} currentDepth - The current depth in the recursive calls.
+	 * @returns {{ [key: string]: any }} A JSON object with multiple random string properties and possible nested objects.
+	 */
+	public static generateRandomJson(totalLength: number, maxDepth: number = 1000, currentDepth: number = 0): Record<string, any> {
+		const jsonObject: Record<string, any> = {};
 		let remainingLength = totalLength;
 
-		while (remainingLength > 0) {
-			// Ensuring the key and value have a minimum length of 1
+		while (remainingLength > 0 && currentDepth < maxDepth) {
+			const isNested = Math.random() < 0.5; // 50% chance to create a nested object
 			const keyLength = Math.min(remainingLength, Math.floor(Math.random() * 10) + 1);
-			const valueLength = Math.min(remainingLength - keyLength, Math.floor(Math.random() * (remainingLength - keyLength)) + 1);
+			const valueLength = isNested ? Math.floor(Math.random() * (remainingLength - keyLength)) + 1 : Math.min(remainingLength - keyLength, Math.floor(Math.random() * (remainingLength - keyLength)) + 1);
 
 			const key = this.generateRandomKey(keyLength);
-			jsonObject[key] = this.generateRandomString(valueLength);
+			if (isNested) {
+				jsonObject[key] = this.generateRandomJson(valueLength, maxDepth, currentDepth + 1);
+			} else {
+				jsonObject[key] = this.generateRandomString(valueLength);
+			}
 
 			remainingLength -= keyLength + valueLength;
+		}
+
+		// Fallback for the last level to ensure it's not an empty object
+		if (currentDepth === maxDepth && Object.keys(jsonObject).length === 0 && totalLength > 0) {
+			const key = this.generateRandomKey(Math.min(10, totalLength));
+			jsonObject[key] = this.generateRandomString(totalLength - key.length);
 		}
 
 		return jsonObject;

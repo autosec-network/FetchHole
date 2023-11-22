@@ -16,7 +16,7 @@
 			"type": "npm",
 			"script": "build:watch",
 			"presentation": {
-				"group": "compile"
+				"group": "build"
 			},
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true

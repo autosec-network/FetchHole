@@ -4,6 +4,5 @@
 		"source.organizeImports": true
 	},
 	"github-actions.workflows.pinned.refresh.enabled": true,
-	"github-actions.workflows.pinned.workflows": [".github/workflows/auto-prerelease.yml"],
-	"typescript.tsdk": "node_modules/typescript/lib"
+	"github-actions.workflows.pinned.workflows": [".github/workflows/auto-prerelease.yml"]
 }

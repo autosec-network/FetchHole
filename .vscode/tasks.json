@@ -18,6 +18,7 @@
 			"presentation": {
 				"group": "compile"
 			},
+			"problemMatcher": "$tsc-watch",
 			"isBackground": true
 		}
 	]

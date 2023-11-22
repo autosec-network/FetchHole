@@ -178,6 +178,6 @@ jobs:
           check-latest: true
           cache: npm
           registry-url: 'https://registry.npmjs.org'
-      - run: npm publish --tag ${{ github.ref_name }} --provenance --dry-run
+      - run: npm publish --tag ${{ github.ref_name }} --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

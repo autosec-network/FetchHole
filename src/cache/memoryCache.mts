@@ -1,4 +1,4 @@
-import { CacheBase } from './cacheBase.mjs';
+import { CacheBase } from './base.mjs';
 
 export class MemoryCache extends CacheBase {
 	protected cache = new Map<Request['url'], Map<Request, Response>>();

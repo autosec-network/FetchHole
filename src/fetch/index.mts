@@ -1,6 +1,6 @@
 import { Chalk } from 'chalk';
 import { EventEmitter } from 'node:events';
-import { MemoryCache } from '../memoryCache.mjs';
+import { MemoryCache } from '../cache/memoryCache.mjs';
 import { CacheType, LoggingLevel, defaultConfig, type FetchHoleConfig, type FetchHoleFetchConfig } from './config.mjs';
 
 const chalk = new Chalk({ level: 1 });

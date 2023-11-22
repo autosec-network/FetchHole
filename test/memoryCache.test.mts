@@ -1,7 +1,7 @@
 import { strictEqual } from 'node:assert/strict';
 import { randomBytes, randomInt } from 'node:crypto';
 import { beforeEach, describe, it } from 'node:test';
-import { MemoryCache } from '../dist/memoryCache.mjs';
+import { MemoryCache } from '../dist/cache/memoryCache.mjs';
 
 /**
  * Class representing a generator for random responses.

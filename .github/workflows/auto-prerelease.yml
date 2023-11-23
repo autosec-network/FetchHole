@@ -91,6 +91,10 @@ jobs:
   test:
     needs: build
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      actions: read
+      checks: write
     strategy:
       fail-fast: false
       matrix:

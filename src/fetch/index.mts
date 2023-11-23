@@ -77,13 +77,8 @@ export class FetchHole {
 	 * @returns {Promise<void>} A Promise that resolves when the logging is complete.
 	 */
 	private async responseLogging(level: LoggingLevel, response: Response, url?: RequestInfo | URL): Promise<void> {
-		let tempHeaders: Record<string, string> = {};
-		response.headers.forEach((value, key) => {
-			tempHeaders[key] = value;
-		});
-
 		const responseInfo: Record<string, any> = {
-			headers: tempHeaders,
+			headers: Object.fromEntries(response.headers.entries()),
 			status: response.status,
 			statusText: response.statusText,
 			ok: response.ok,

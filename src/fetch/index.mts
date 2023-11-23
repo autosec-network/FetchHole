@@ -59,7 +59,7 @@ export class FetchHole {
 		const cfg = init?.fetchHole || defaultConfig;
 		if (cfg.logLevel < LoggingLevel.DEBUG) {
 			delete (cfg as any)['cf'];
-			delete (cfg as any)['body'];
+			delete init['body'];
 		}
 		return cfg;
 	}

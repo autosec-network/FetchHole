@@ -110,7 +110,7 @@ jobs:
           $relativeFiles = $files | ForEach-Object { $_.Replace($currentPath.Path + '\', '').Replace('\', '/') }
           $fileString = $relativeFiles -join ' '
           echo "Found files: $fileString"
-          echo "test-files=$fileString" >> $GITHUB_OUTPUT
+          echo "test-files=$fileString" >> $env:GITHUB_OUTPUT
         shell: pwsh
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0

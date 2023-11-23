@@ -13,11 +13,10 @@ export class FetchHole {
 	private config: FetchHoleConfig;
 
 	constructor(config: Partial<FetchHoleConfig> = {}) {
-		const effective = {
+		this.config = {
 			...defaultConfig,
 			...(config || {}),
 		};
-		this.config = effective;
 	}
 
 	private configForCall(overrides: Partial<FetchHoleFetchConfig> = {}): FetchHoleConfig {

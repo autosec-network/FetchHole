@@ -23,7 +23,7 @@
 		},
 		{
 			"label": "TS Test",
-			"dependsOn": ["memoryCache", "doh"],
+			"dependsOn": ["doh", "memoryCache"],
 			"group": {
 				"kind": "test",
 				"isDefault": true
@@ -31,9 +31,9 @@
 			"isBackground": true
 		},
 		{
-			"label": "memoryCache",
+			"label": "doh",
 			"type": "npm",
-			"script": "test -- --watch ./test/memoryCache.test.mts",
+			"script": "test -- --watch ./test/doh.test.mts",
 			"isBackground": true,
 			"group": {
 				"kind": "test"
@@ -43,9 +43,9 @@
 			}
 		},
 		{
-			"label": "doh",
+			"label": "memoryCache",
 			"type": "npm",
-			"script": "test -- --watch ./test/doh.test.mts",
+			"script": "test -- --watch ./test/memoryCache.test.mts",
 			"isBackground": true,
 			"group": {
 				"kind": "test"

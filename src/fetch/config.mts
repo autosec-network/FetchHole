@@ -34,6 +34,6 @@ export enum LoggingLevel {
 export const defaultConfig = {
 	cacheType: CacheType.Default,
 	hardFail: true,
-	redirectCount: 20,
 	logLevel: LoggingLevel.INFO,
+	redirectCount: 20,
 } satisfies FetchHoleConfig;

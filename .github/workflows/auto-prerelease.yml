@@ -132,7 +132,7 @@ jobs:
           path: test-output.xml
           reporter: 'jest-junit'
           max-annotations: 50
-      - uses: test-summary/action@4ee9ece4bca777a38f05c8fc578ac2007fe266f7 # v2.0
+      - uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f # v2.1
         if: always()
         with:
           paths: test-output.xml

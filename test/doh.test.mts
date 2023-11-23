@@ -15,7 +15,6 @@ describe('DohResolver Tests', () => {
 
 			it('should handle valid inputs and return a successful response', async () => {
 				const response = await dohResolver.query({ name: 'github.com' });
-				console.log(response);
 
 				// Assert that the response contains the required properties of DohSuccessfulResponse
 				strictEqual(typeof response.Status, 'number');

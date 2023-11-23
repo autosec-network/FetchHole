@@ -38,6 +38,6 @@ interface StreamChunkEvents {
 	end: [];
 }
 
-export interface textStreamChunkEvents extends Record<string, [chunk: string]>, StreamChunkEvents {}
+export interface textStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: string]> {}
 
-export interface jsonStreamChunkEvents extends Record<string, [chunk: Record<string, any> | Record<string, any>[]]>, StreamChunkEvents {}
+export interface jsonStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: Record<string, any> | Record<string, any>[]]> {}

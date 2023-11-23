@@ -1,6 +1,7 @@
 import { Chalk } from 'chalk';
 import { MemoryCache } from '../cache/memoryCache.mjs';
 import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
+import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from './types.js';
 
 const chalk = new Chalk({ level: 1 });
@@ -100,82 +101,139 @@ export class FetchHole {
 	 * @throws {GraphQLError} If an unsafe redirect is encountered (i.e., a redirect to a different origin) and hardFail is set to true, or if the fetch fails for any other reason and hardFail is set to true.
 	 */
 	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0): Promise<StreamableResponse> {
-		const config = this.configForCall(init);
+		return new Promise<StreamableResponse>(async (mainResolve, _mainReject) => {
+			const config = this.configForCall(init);
 
-		const initToSend: RequestInit = {
-			...{
-				...init,
+			const initToSend: RequestInit = {
 				...{
-					fetchHole: config,
+					...init,
+					...{
+						fetchHole: config,
+					},
 				},
-			},
-			...{
-				redirect: config.redirectCount <= 0 ? 'error' : redirectCount == Number(config.redirectCount) ? 'error' : 'manual',
-			},
-		};
-		const customRequest = new Request(destination, initToSend);
-		let response: StreamableResponse | undefined;
+				...{
+					redirect: config.redirectCount <= 0 ? 'error' : redirectCount == Number(config.redirectCount) ? 'error' : 'manual',
+				},
+			};
+			const customRequest = new Request(destination, initToSend);
+			let response: StreamableResponse | undefined;
 
-		this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init), null, '\t')]);
+			this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
 
-		// Attempt cache
-		switch (config.cacheType) {
-			case CacheType.Memory:
-				try {
-					response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
-				} catch (error) {
-					this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
-				}
-
-				break;
-			// TODO Disk
-		}
-
-		const getFresh = async () => {
-			if (config.cacheType != CacheType.Default) {
-				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
-			}
-
-			response = (await fetch(customRequest, initToSend)) as StreamableResponse;
-
-			if (response.ok) {
-				// Append missing headers
-				if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
-					// TODO: Generate Content-Length
-					// TODO: Generate ETag
-				}
-
-				// TODO: Save to cache
-			} else if ([301, 302, 303, 307, 308].includes(response.status)) {
-				// TODO: Redirect
-			} else {
-				await this.responseLogging(config.logLevel, response!, customRequest.url);
-
-				if (config.hardFail) {
-					let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-					if (config.logLevel > LoggingLevel.INFO) {
-						errorMsg += ` for ${destination}`;
+			// Attempt cache
+			switch (config.cacheType) {
+				case CacheType.Memory:
+					try {
+						response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
+					} catch (error) {
+						this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
 					}
-					throw new Error(errorMsg);
-				} else {
-					this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [destination]);
-				}
-				return;
+
+					break;
+				// TODO Disk
 			}
-		};
 
-		if (response) {
-			// Good cache
-			this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
-		} else {
-			// No cache found at all
-			await getFresh();
-		}
+			const getFresh = async () => {
+				if (config.cacheType != CacheType.Default) {
+					this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
+				}
 
-		await this.responseLogging(config.logLevel, response!, customRequest.url);
+				response = (await fetch(customRequest, initToSend)) as StreamableResponse;
 
-		// TODO: Streaming support
+				if (response.ok) {
+					// Append missing headers
+					if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
+						// TODO: Generate Content-Length
+						// TODO: Generate ETag
+					}
 
-		return response!;
+					// TODO: Save to cache
+				} else if ([301, 302, 303, 307, 308].includes(response.status)) {
+					// TODO: Redirect
+					// https://fetch.spec.whatwg.org/#http-redirect-fetch
+				} else {
+					await this.responseLogging(config.logLevel, response!, customRequest.url);
+
+					if (config.hardFail) {
+						let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+						if (config.logLevel > LoggingLevel.INFO) {
+							errorMsg += ` for ${destination}`;
+						}
+						throw new Error(errorMsg);
+					} else {
+						this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [destination]);
+					}
+					return;
+				}
+			};
+
+			if (response) {
+				// Good cache
+				this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
+			} else {
+				// No cache found at all
+				await getFresh();
+			}
+
+			await this.responseLogging(config.logLevel, response!, customRequest.url);
+
+			let processTextEventStream = false;
+			if (response?.headers.has('content-type') && response.headers.get('content-type') === 'text/event-stream') {
+				response.jsonEvents = new JsonEventStreamParser();
+				response.textEvents = new TextEventStreamParser();
+
+				processTextEventStream = true;
+			}
+
+			mainResolve(response!);
+
+			if (processTextEventStream) {
+				// TODO: Streaming support
+				new Promise<void>(async (resolve, reject) => {
+					try {
+						let accumulatedData = '';
+						// @ts-ignore
+						for await (const chunk of response!.body!) {
+							const decodedChunk = new TextDecoder('utf-8').decode(chunk, { stream: true });
+							accumulatedData += decodedChunk;
+
+							let newlineIndex;
+							while ((newlineIndex = accumulatedData.indexOf('\n')) >= 0) {
+								// Found a newline
+								const line = accumulatedData.slice(0, newlineIndex).trim();
+								accumulatedData = accumulatedData.slice(newlineIndex + 1); // Remove the processed line from the accumulated data
+
+								const colonIndex = line.indexOf(':');
+								if (colonIndex !== -1) {
+									const eventName = line.substring(0, colonIndex).trim();
+									const eventData = line.substring(colonIndex + 1).trim();
+
+									// Process and emit the event
+									if (eventName && eventData) {
+										try {
+											// See if it's JSON
+											const decodedJson = JSON.parse(eventData);
+											// Return JSON
+											response!.jsonEvents?.emit(eventName, decodedJson);
+										} catch (error) {
+											// Not valid JSON - just ignore and move on
+										} finally {
+											// Return string
+											response!.textEvents?.emit(eventName, eventData);
+										}
+									}
+								}
+							}
+						}
+					} catch (error) {
+						reject(error);
+					} finally {
+						response!.jsonEvents?.emit('end');
+						response!.textEvents?.emit('end');
+						resolve();
+					}
+				});
+			}
+		});
 	}
 }

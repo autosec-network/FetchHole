@@ -1,3 +1,5 @@
+export type ExcludeUndefined<T> = T extends undefined ? never : T;
+
 export interface DohRequest {
 	/**
 	 * The hostname of the DNS record to query (e.g., "example.com").

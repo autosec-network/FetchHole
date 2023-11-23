@@ -3,18 +3,23 @@ import { beforeEach, describe, it } from 'node:test';
 import { DohResolver } from '../dist/fetch/doh/doh.mjs';
 
 describe('DohResolver Tests', () => {
-	const resolversToCheck: URL[] = [new URL('https://dns.google/resolve'), new URL('https://cloudflare-dns.com/dns-query')];
+	const resolversToCheck = new Map<string, `${string}/${string}`>([
+		['https://dns.google/resolve', 'application/dns-json'],
+		// ['https://dns.google/dns-query', 'application/dns-message'],
+		['https://cloudflare-dns.com/dns-query', 'application/dns-json'],
+		// ['https://cloudflare-dns.com/dns-query', 'application/message'],
+	]);
 
-	resolversToCheck.forEach((resolverURL) => {
+	for (const [resolverURL, ct] of resolversToCheck.entries()) {
 		let dohResolver: DohResolver;
 
-		describe(`Tests with resolver: ${resolverURL}`, () => {
+		describe(`Tests with resolver ${resolverURL} using ${ct}`, () => {
 			beforeEach(() => {
 				dohResolver = new DohResolver(resolverURL);
 			});
 
 			it('should handle valid inputs and return a successful response', async () => {
-				const response = await dohResolver.query({ name: 'github.com' });
+				const response = await dohResolver.query({ name: 'github.com', ct });
 
 				// Assert that the response contains the required properties of DohSuccessfulResponse
 				strictEqual(typeof response.Status, 'number');
@@ -66,5 +71,5 @@ describe('DohResolver Tests', () => {
 				// }
 			});
 		});
-	});
+	}
 });

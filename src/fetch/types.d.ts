@@ -30,5 +30,5 @@ export interface FetchHoleConfig {
  * Combined `fetch` configuration which includes a `fetchHole` property.
  */
 export interface FetchHoleFetchConfig extends RequestInit {
-	fetchHole: FetchHoleConfig;
+	fetchHole?: FetchHoleConfig;
 }

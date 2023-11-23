@@ -8,7 +8,7 @@
 	"scripts": {
 		"build": "tsc",
 		"build:watch": "npm run build -- --watch",
-		"test": "node --loader ts-node/esm --test --test-reporter=spec"
+		"test": "node --experimental-test-coverage --loader ts-node/esm --test --test-reporter=spec"
 	},
 	"repository": {
 		"type": "git",

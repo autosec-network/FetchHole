@@ -19,10 +19,22 @@ export class FetchHole {
 		};
 	}
 
-	private configForCall(overrides: Partial<FetchHoleFetchConfig> = {}): FetchHoleConfig {
+	private configForCall(overrides: Partial<FetchHoleConfig>): FetchHoleConfig;
+	private configForCall(overrides: FetchHoleFetchConfig): FetchHoleConfig;
+	private configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig): FetchHoleConfig {
+		let fetchHoleConfig: Partial<FetchHoleConfig>;
+
+		if ('fetchHole' in overrides) {
+			// Extract fetchHole property if overrides is of type FetchHoleFetchConfig
+			fetchHoleConfig = (overrides as FetchHoleFetchConfig).fetchHole || {};
+		} else {
+			// Use overrides directly if it's of type Partial<FetchHoleConfig>
+			fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
+		}
+
 		return {
 			...this.config,
-			...(overrides?.fetchHole || {}),
+			...fetchHoleConfig,
 		};
 	}
 

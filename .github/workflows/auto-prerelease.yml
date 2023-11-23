@@ -119,7 +119,7 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - run: echo "${{ toJson(job) }}"
+      - run: echo "${{ github.job }}"
       - run: npm test -- --test-reporter-destination=test-output.md --test-reporter=spec --test-reporter-destination=stdout ${{ steps.find-tests.outputs.test-files }}
       - run: cat test-output.md >> $GITHUB_STEP_SUMMARY
         if: always()

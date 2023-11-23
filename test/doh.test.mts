@@ -38,7 +38,7 @@ describe('DohResolver Tests', () => {
 					}
 				}
 				if (response.Authority) {
-					ok(response.Authority === undefined || Array.isArray(response.Authority));
+					ok(Array.isArray(response.Authority));
 					for (const authority of response.Authority) {
 						strictEqual(typeof authority.name, 'string');
 						ok(['string', 'number'].includes(typeof authority.type));
@@ -47,7 +47,7 @@ describe('DohResolver Tests', () => {
 					}
 				}
 				if (response.Additional) {
-					ok(response.Additional === undefined || Array.isArray(response.Additional));
+					ok(Array.isArray(response.Additional));
 					for (const additional of response.Additional) {
 						strictEqual(typeof additional.name, 'string');
 						ok(['string', 'number'].includes(typeof additional.type));

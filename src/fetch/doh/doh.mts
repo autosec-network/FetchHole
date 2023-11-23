@@ -22,25 +22,18 @@ export class DohResolver {
 		return url;
 	}
 
-	/*private makePostQuery(qName: string, qType: string | number = 'A', qDo: string | number | boolean = false, qCd: string | number | boolean = false): DohBodyRequest {
-		return {
-			name: qName,
-			type: qType,
-			do: qDo,
-			cd: qCd,
-		};
-	}*/
-
-	// private async sendDohMsg(method: 'GET' | 'POST' = 'GET', timeout: number = 10 * 1000, url: URL = this.nameserver_url, body?: DohBodyRequest): Promise<Response> {
-	private async sendDohMsg(method: 'GET' | 'POST' = 'GET', timeout: number = 10 * 1000, url: URL = this.nameserver_url): Promise<Response> {
+	private async sendDohMsg(method: 'GET' | 'POST', ct: ExcludeUndefined<DohRequest['ct']>, timeout: number, url: URL, body?: ArrayBuffer): Promise<Response> {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort(), timeout);
 
+		const headers = new Headers();
+		headers.set('Content-Type', ct);
+		headers.set('Accept', ct);
+
 		const response = await fetch(url, {
 			method: method,
-			headers: {
-				Accept: 'application/dns-json',
-			},
+			headers: headers,
+			body: body ? new Blob([body]) : undefined,
 			signal: controller.signal,
 		});
 

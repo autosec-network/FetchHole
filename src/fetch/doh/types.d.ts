@@ -14,9 +14,10 @@ export interface DohRequest {
 	 */
 	cd?: 0 | 1 | boolean;
 	/**
-	 * Desired content type option. Use ct=application/dns-message to receive a binary DNS message in the response HTTP body instead of JSON text. Use ct=application/x-javascript to explicitly request JSON text. Other content type values are ignored and default JSON content is returned.
+	 * Desired content type option. Use ct=application/dns-message to receive a binary DNS message in the response HTTP body instead of JSON text. Use ct=application/dns-json to explicitly request JSON text. Other content type values are ignored and default JSON content is returned.
+	 * @default `application/dns-message` if resolver ends with `/dns-query` otherwise `application/dns-json`
 	 */
-	ct?: 'application/dns-message' | 'application/x-javascript';
+	ct?: 'application/dns-message' | 'application/dns-json';
 	/**
 	 * The DO (DNSSEC OK) flag. Use do=1, or do=true to include DNSSEC records (RRSIG, NSEC, NSEC3); use do=0, do=false, or no do parameter to omit DNSSEC records.
 	 * @default false

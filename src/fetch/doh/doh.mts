@@ -1,4 +1,4 @@
-import type { DohErrorResponse, DohSuccessfulResponse } from './types.js';
+import type { DohErrorResponse, DohRequest, DohSuccessfulResponse } from './types.js';
 
 export class DohResolver {
 	private nameserver_url: URL;
@@ -7,16 +7,17 @@ export class DohResolver {
 		this.nameserver_url = new URL(nameserver_url);
 	}
 
-	public async query(qName: string, qType: string | number = 'A', qDo: string | number | boolean = false, qCd: string | number | boolean = false, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse> {
-		const response = await this.sendDohMsg('GET', timeout, this.makeGetQuery(this.nameserver_url, qName, qType, qDo, qCd));
+	public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse> {
+		const response = await this.sendDohMsg('GET', timeout, this.makeGetQuery(this.nameserver_url, parameters));
 		return response.json();
 	}
 
-	private makeGetQuery(url: URL, qName: string, qType: string | number = 'A', qDo: string | number | boolean = false, qCd: string | number | boolean = false): URL {
-		url.searchParams.set('name', qName);
-		url.searchParams.set('type', qType.toString());
-		url.searchParams.set('do', qDo.toString());
-		url.searchParams.set('cd', qCd.toString());
+	private makeGetQuery(url: URL, parameters: DohRequest): URL {
+		Object.entries(parameters).forEach(([key, value]) => {
+			if (value !== undefined) {
+				url.searchParams.set(key, value.toString());
+			}
+		});
 
 		return url;
 	}

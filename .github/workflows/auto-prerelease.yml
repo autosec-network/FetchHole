@@ -119,10 +119,7 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - run: cat test-output.md >> $GITHUB_STEP_SUMMARY
       - run: echo "${{ github.job }} (${{ toJson(matrix) }})"
-        if: always()
-        shell: bash
       - run: npm test -- --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-output.xml ${{ steps.find-tests.outputs.test-files }}
   # tag:
   #   needs: [detect, test]

@@ -131,6 +131,11 @@ jobs:
           path: test-output.xml
           reporter: 'jest-junit'
           max-annotations: 50
+      - uses: test-summary/action@4ee9ece4bca777a38f05c8fc578ac2007fe266f7 # v2.0
+        if: always()
+        with:
+          paths: test-output.xml
+          show: all
   # tag:
   #   needs: [detect, test]
   #   if: needs.detect.outputs.pr == 'none'

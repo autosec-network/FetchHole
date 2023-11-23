@@ -22,6 +22,7 @@ export interface StreamableResponse extends Response {
  */
 export interface FetchHoleConfig {
 	cacheType: CacheType;
+	hardFail: boolean;
 	redirectCount: number;
 	logLevel: LoggingLevel;
 }

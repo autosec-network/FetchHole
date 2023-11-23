@@ -99,28 +99,68 @@ export class FetchHole {
 	 *
 	 * @throws {GraphQLError} If an unsafe redirect is encountered (i.e., a redirect to a different origin) and hardFail is set to true, or if the fetch fails for any other reason and hardFail is set to true.
 	 */
-	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig): Promise<StreamableResponse> {
+	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0): Promise<StreamableResponse> {
 		const config = this.configForCall(init);
 
-		const initToSend: RequestInit = { ...init, ...{ redirect: config.redirectCount <= 0 ? 'error' : 'manual' } };
+		const initToSend: RequestInit = {
+			...{
+				...init,
+				...{
+					fetchHole: config,
+				},
+			},
+			...{
+				redirect: config.redirectCount <= 0 ? 'error' : redirectCount == Number(config.redirectCount) ? 'error' : 'manual',
+			},
+		};
 		const customRequest = new Request(destination, initToSend);
 		let response: StreamableResponse | undefined;
 
 		this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init), null, '\t')]);
 
 		// Attempt cache
-		if (init?.fetchHole.cacheType == CacheType.Memory) {
-			response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
-		} else if (init?.fetchHole.cacheType == CacheType.Disk) {
-			try {
-			} catch (error) {
-				this.logWriter(init.fetchHole.logLevel, [chalk.red(`${init?.fetchHole.cacheType} Cache error`)], [error]);
-			}
+		switch (config.cacheType) {
+			case CacheType.Memory:
+				try {
+					response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
+				} catch (error) {
+					this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
+				}
+
+				break;
+			// TODO Disk
 		}
 
 		const getFresh = async () => {
 			if (config.cacheType != CacheType.Default) {
-				this.logWriter(config.logLevel, [chalk.yellow(`${init?.fetchHole.cacheType} Cache missed`)], [customRequest.url]);
+				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
+			}
+
+			response = (await fetch(customRequest, initToSend)) as StreamableResponse;
+
+			if (response.ok) {
+				// Append missing headers
+				if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
+					// TODO: Generate Content-Length
+					// TODO: Generate ETag
+				}
+
+				// TODO: Save to cache
+			} else if ([301, 302, 303, 307, 308].includes(response.status)) {
+				// TODO: Redirect
+			} else {
+				await this.responseLogging(config.logLevel, response!, customRequest.url);
+
+				if (config.hardFail) {
+					let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+					if (config.logLevel > LoggingLevel.INFO) {
+						errorMsg += ` for ${destination}`;
+					}
+					throw new Error(errorMsg);
+				} else {
+					this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [destination]);
+				}
+				return;
 			}
 		};
 
@@ -133,6 +173,8 @@ export class FetchHole {
 		}
 
 		await this.responseLogging(config.logLevel, response!, customRequest.url);
+
+		// TODO: Streaming support
 
 		return response!;
 	}

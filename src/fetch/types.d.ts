@@ -16,3 +16,19 @@ export interface StreamableResponse extends Response {
 	textEvents?: EventEmitter;
 	jsonEvents?: EventEmitter;
 }
+
+/**
+ * Main FetchHole configuration shape.
+ */
+export interface FetchHoleConfig {
+	cacheType: CacheType;
+	redirectCount: number;
+	logLevel: LoggingLevel;
+}
+
+/**
+ * Combined `fetch` configuration which includes a `fetchHole` property.
+ */
+export interface FetchHoleFetchConfig extends RequestInit {
+	fetchHole: FetchHoleConfig;
+}

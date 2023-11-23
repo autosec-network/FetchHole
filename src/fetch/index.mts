@@ -1,7 +1,7 @@
 import { Chalk } from 'chalk';
 import { MemoryCache } from '../cache/memoryCache.mjs';
-import { CacheType, LoggingLevel, defaultConfig, type FetchHoleConfig, type FetchHoleFetchConfig } from './config.mjs';
-import type { StreamableResponse } from './types.js';
+import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
+import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from './types.js';
 
 const chalk = new Chalk({ level: 1 });
 

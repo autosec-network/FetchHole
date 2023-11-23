@@ -1,4 +1,4 @@
-import { EventEmitter } from 'node:events';
+import { type JsonEventStreamParser, type TextEventStreamParser } from './eventStreamParser.mjs';
 
 /**
  * An extension of the Response interface that includes event emitters for streaming text and JSON data.
@@ -9,12 +9,12 @@ import { EventEmitter } from 'node:events';
  *
  * @extends {Response}
  *
- * @property {EventEmitter} [textEvents] - An optional EventEmitter for streaming text data.
- * @property {EventEmitter} [jsonEvents] - An optional EventEmitter for streaming JSON data.
+ * @property {TextEventStreamParser} [textEvents] - An optional EventEmitter for streaming text data.
+ * @property {JsonEventStreamParser} [jsonEvents] - An optional EventEmitter for streaming JSON data.
  */
 export interface StreamableResponse extends Response {
-	textEvents?: EventEmitter;
-	jsonEvents?: EventEmitter;
+	textEvents?: TextEventStreamParser;
+	jsonEvents?: JsonEventStreamParser;
 }
 
 /**

@@ -55,15 +55,17 @@ export class FetchHole {
 	 *
 	 * @returns {FetchHoleFetchConfig} The updated RequestInit object without the 'body' property.
 	 */
-	private initBodyTrimmer(init?: FetchHoleFetchConfig): FetchHoleConfig {
-		const cfg = init?.fetchHole || defaultConfig;
-		if (cfg.logLevel < LoggingLevel.DEBUG) {
+	private initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
+		const config = this.configForCall(init);
+
+		if (config.logLevel < LoggingLevel.DEBUG) {
 			if ('cf' in init) {
 				delete init['cf'];
 			}
 			delete init['body'];
 		}
-		return cfg;
+
+		return init;
 	}
 
 	/**

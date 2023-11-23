@@ -15,7 +15,7 @@ export class FetchHole {
 	constructor(config: Partial<FetchHoleConfig> = {}) {
 		this.config = {
 			...defaultConfig,
-			...(config || {}),
+			...config,
 		};
 	}
 

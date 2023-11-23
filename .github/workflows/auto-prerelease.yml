@@ -5,8 +5,9 @@ on:
     branches-ignore:
       - latest
     paths:
-      - '.github/workflows/compile.yml'
+      - '.github/workflows/auto-prerelease.yml'
       - 'src/**'
+      - 'test/**'
       - 'package*.json'
       - 'tsconfig.json'
   workflow_dispatch:
@@ -26,6 +27,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      pr: ${{ steps.check_pr.outputs.PR_NUMBER }}
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - name: Check if commit is part of a PR
+        id: check_pr
+        run: |
+          PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number --jq '.[0].number // empty' --repo ${{ github.repository }})
+
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "This commit is a direct push to a branch."
+            echo "PR_NUMBER=none" >> $GITHUB_OUTPUT
+          else
+            echo "This commit is part of PR #$PR_NUMBER."
+            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
   build:
     runs-on: ubuntu-latest
     steps:
@@ -33,7 +57,7 @@ jobs:
         with:
           disable-sudo: true
           egress-policy: audit
-      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:
           node-version: lts/*
@@ -66,97 +90,130 @@ jobs:
           if-no-files-found: error
   test:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      actions: read
+      checks: write
     strategy:
       fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        version: [lts/*, latest]
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        if: matrix.os == 'ubuntu-latest'
         with:
           disable-sudo: true
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
+      - name: Find test files
+        id: find-tests
+        run: |
+          $currentPath = Get-Location
+          $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | ForEach-Object { $_.FullName }
+          $relativeFiles = $files | ForEach-Object { $_.Replace($currentPath.Path + '\', '').Replace('\', '/') }
+          $fileString = $relativeFiles -join ' '
+          echo "Found files: $fileString"
+          echo "test-files=$fileString" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:
-          node-version: lts/*
+          node-version: ${{ matrix.version }}
           check-latest: true
           cache: npm
       - run: npm ci
-      # TODO: actually test
-  tag:
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      npm-version-new-tag: ${{ steps.npm-version.outputs.NEW_TAG }}
-      commit_sha: ${{ steps.tag_sha.outputs.commit_sha }}
-    steps:
-      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+      - run: npm test -- --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-output.xml ${{ steps.find-tests.outputs.test-files }}
+      - uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4 # v1.7.0
+        if: always()
         with:
-          disable-sudo: true
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+          name: '${{ github.job }} (${{ matrix.os }}, ${{ matrix.version }})'
+          path: test-output.xml
+          reporter: 'jest-junit'
+          max-annotations: 50
+      - uses: test-summary/action@4ee9ece4bca777a38f05c8fc578ac2007fe266f7 # v2.0
+        if: always()
         with:
-          fetch-depth: 0 # Important to fetch all history for versioning
-      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
-        with:
-          node-version: lts/*
-          check-latest: true
-          cache: npm
-      - name: Git Setup
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      - run: echo "NEW_TAG=$(npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
-        id: npm-version
-      - run: git push --follow-tags
-      - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        id: tag_sha
-  release:
-    needs: tag
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-        with:
-          disable-sudo: true
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-      # - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
-      - run: zip -r ${{ github.workspace }}/dist.zip ${{ github.workspace }}/dist
-      - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-        with:
-          prerelease: true
-          files: |
-            ${{ github.workspace }}/dist.zip
-          tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
-          fail_on_unmatched_files: true
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  publish:
-    needs: [tag, release]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-        with:
-          disable-sudo: true
-          egress-policy: audit
-      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
-        with:
-          ref: ${{ needs.tag.outputs.commit_sha }}
-      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # v3.0.0
-      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
-        with:
-          node-version: lts/*
-          check-latest: true
-          cache: npm
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm publish --tag ${{ github.ref_name }} --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          paths: test-output.xml
+          show: all
+  # tag:
+  #   needs: [detect, test]
+  #   if: needs.detect.outputs.pr == 'none'
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   outputs:
+  #     npm-version-new-tag: ${{ steps.npm-version.outputs.NEW_TAG }}
+  #     commit_sha: ${{ steps.tag_sha.outputs.commit_sha }}
+  #   steps:
+  #     - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+  #       with:
+  #         disable-sudo: true
+  #         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+  #       with:
+  #         fetch-depth: 0 # Important to fetch all history for versioning
+  #     - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
+  #       with:
+  #         node-version: lts/*
+  #         check-latest: true
+  #         cache: npm
+  #     - name: Git Setup
+  #       run: |
+  #         git config user.name "github-actions[bot]"
+  #         git config user.email "github-actions[bot]@users.noreply.github.com"
+  #     - run: echo "NEW_TAG=$(npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
+  #       id: npm-version
+  #     - run: git push --follow-tags
+  #     - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+  #       id: tag_sha
+  # release:
+  #   needs: [detect, tag]
+  #   if: needs.detect.outputs.pr == 'none'
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+  #       with:
+  #         disable-sudo: true
+  #         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+  #     - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+  #     - run: zip -r ${{ github.workspace }}/dist.zip ${{ github.workspace }}/dist LICENSE README.md
+  #     - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+  #       with:
+  #         prerelease: true
+  #         files: |
+  #           ${{ github.workspace }}/dist.zip
+  #         tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
+  #         fail_on_unmatched_files: true
+  #         generate_release_notes: true
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # publish:
+  #   needs: [detect, tag, release]
+  #   if: needs.detect.outputs.pr == 'none'
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #   steps:
+  #     - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+  #       with:
+  #         disable-sudo: true
+  #         egress-policy: audit
+  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+  #       with:
+  #         ref: ${{ needs.tag.outputs.commit_sha }}
+  #     - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+  #     - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
+  #       with:
+  #         node-version: lts/*
+  #         check-latest: true
+  #         cache: npm
+  #         registry-url: 'https://registry.npmjs.org'
+  #     - run: npm publish --tag ${{ github.ref_name }} --provenance
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

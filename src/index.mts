@@ -1,2 +1,3 @@
 // Configuration Types
-export type { CacheType, FetchHoleConfig, FetchHoleFetchConfig } from './fetch/config.mjs';
+export type { CacheType } from './fetch/config.mjs';
+export type { FetchHoleConfig, FetchHoleFetchConfig } from './fetch/types.js';

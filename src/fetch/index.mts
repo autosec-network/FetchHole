@@ -1,26 +1,10 @@
 import { Chalk } from 'chalk';
-import { EventEmitter } from 'node:events';
-import { MemoryCache } from '../memoryCache.mjs';
-import { CacheType, LoggingLevel, defaultConfig, type FetchHoleConfig, type FetchHoleFetchConfig } from './config.mjs';
+import { MemoryCache } from '../cache/memoryCache.mjs';
+import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
+import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
+import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from './types.js';
 
 const chalk = new Chalk({ level: 1 });
-
-/**
- * An extension of the Response interface that includes event emitters for streaming text and JSON data.
- * @description This interface is intended for use with Server-Sent Events (SSE) responses.
- *
- * @export
- * @interface StreamableResponse
- *
- * @extends {Response}
- *
- * @property {EventEmitter} [textEvents] - An optional EventEmitter for streaming text data.
- * @property {EventEmitter} [jsonEvents] - An optional EventEmitter for streaming JSON data.
- */
-export interface StreamableResponse extends Response {
-	textEvents?: EventEmitter;
-	jsonEvents?: EventEmitter;
-}
 
 export class FetchHole {
 	private memCache = new MemoryCache();
@@ -30,17 +14,26 @@ export class FetchHole {
 	private config: FetchHoleConfig;
 
 	constructor(config: Partial<FetchHoleConfig> = {}) {
-		const effective = {
+		this.config = {
 			...defaultConfig,
-			...(config || {}),
+			...config,
 		};
-		this.config = effective;
 	}
 
-	private configForCall(overrides: Partial<FetchHoleFetchConfig> = {}): FetchHoleConfig {
+	private configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}): FetchHoleConfig {
+		let fetchHoleConfig: Partial<FetchHoleConfig>;
+
+		if ('fetchHole' in overrides) {
+			// Extract fetchHole property if overrides is of type FetchHoleFetchConfig
+			fetchHoleConfig = (overrides as FetchHoleFetchConfig).fetchHole || {};
+		} else {
+			// Use overrides directly if it's of type Partial<FetchHoleConfig>
+			fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
+		}
+
 		return {
 			...this.config,
-			...(overrides?.fetchHole || {}),
+			...fetchHoleConfig,
 		};
 	}
 
@@ -61,13 +54,17 @@ export class FetchHole {
 	 *
 	 * @returns {FetchHoleFetchConfig} The updated RequestInit object without the 'body' property.
 	 */
-	private initBodyTrimmer(init?: FetchHoleFetchConfig): FetchHoleConfig {
-		const cfg = init?.fetchHole || defaultConfig;
-		if (cfg.logLevel < LoggingLevel.DEBUG) {
-			delete (cfg as any)['cf'];
-			delete (cfg as any)['body'];
+	private initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
+		const config = this.configForCall(init);
+
+		if (config.logLevel < LoggingLevel.DEBUG) {
+			if ('cf' in init) {
+				delete init['cf'];
+			}
+			delete init['body'];
 		}
-		return cfg;
+
+		return init;
 	}
 
 	/**
@@ -79,13 +76,8 @@ export class FetchHole {
 	 * @returns {Promise<void>} A Promise that resolves when the logging is complete.
 	 */
 	private async responseLogging(level: LoggingLevel, response: Response, url?: RequestInfo | URL): Promise<void> {
-		let tempHeaders: Record<string, string> = {};
-		response.headers.forEach((value, key) => {
-			tempHeaders[key] = value;
-		});
-
 		const responseInfo: Record<string, any> = {
-			headers: tempHeaders,
+			headers: Object.fromEntries(response.headers.entries()),
 			status: response.status,
 			statusText: response.statusText,
 			ok: response.ok,
@@ -108,41 +100,140 @@ export class FetchHole {
 	 *
 	 * @throws {GraphQLError} If an unsafe redirect is encountered (i.e., a redirect to a different origin) and hardFail is set to true, or if the fetch fails for any other reason and hardFail is set to true.
 	 */
-	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig): Promise<StreamableResponse> {
-		const config = this.configForCall(init);
+	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0): Promise<StreamableResponse> {
+		return new Promise<StreamableResponse>(async (mainResolve, _mainReject) => {
+			const config = this.configForCall(init);
 
-		const initToSend: RequestInit = { ...init, ...{ redirect: config.redirectCount <= 0 ? 'error' : 'manual' } };
-		const customRequest = new Request(destination, initToSend);
-		let response: StreamableResponse | undefined;
+			const initToSend: RequestInit = {
+				...{
+					...init,
+					...{
+						fetchHole: config,
+					},
+				},
+				...{
+					redirect: config.redirectCount <= 0 ? 'error' : redirectCount == Number(config.redirectCount) ? 'error' : 'manual',
+				},
+			};
+			const customRequest = new Request(destination, initToSend);
+			let response: StreamableResponse | undefined;
 
-		this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init), null, '\t')]);
+			this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
 
-		// Attempt cache
-		if (init?.fetchHole.cacheType == CacheType.Memory) {
-			response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
-		} else if (init?.fetchHole.cacheType == CacheType.Disk) {
-			try {
-			} catch (error) {
-				this.logWriter(init.fetchHole.logLevel, [chalk.red(`${init?.fetchHole.cacheType} Cache error`)], [error]);
+			// Attempt cache
+			switch (config.cacheType) {
+				case CacheType.Memory:
+					try {
+						response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
+					} catch (error) {
+						this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
+					}
+
+					break;
+				// TODO Disk
 			}
-		}
 
-		const getFresh = async () => {
-			if (config.cacheType != CacheType.Default) {
-				this.logWriter(config.logLevel, [chalk.yellow(`${init?.fetchHole.cacheType} Cache missed`)], [customRequest.url]);
+			const getFresh = async () => {
+				if (config.cacheType != CacheType.Default) {
+					this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
+				}
+
+				response = (await fetch(customRequest, initToSend)) as StreamableResponse;
+
+				if (response.ok) {
+					// Append missing headers
+					if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
+						// TODO: Generate Content-Length
+						// TODO: Generate ETag
+					}
+
+					// TODO: Save to cache
+				} else if ([301, 302, 303, 307, 308].includes(response.status)) {
+					// TODO: Redirect
+					// https://fetch.spec.whatwg.org/#http-redirect-fetch
+				} else {
+					await this.responseLogging(config.logLevel, response!, customRequest.url);
+
+					if (config.hardFail) {
+						let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+						if (config.logLevel > LoggingLevel.INFO) {
+							errorMsg += ` for ${destination}`;
+						}
+						throw new Error(errorMsg);
+					} else {
+						this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [destination]);
+					}
+					return;
+				}
+			};
+
+			if (response) {
+				// Good cache
+				this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
+			} else {
+				// No cache found at all
+				await getFresh();
 			}
-		};
 
-		if (response) {
-			// Good cache
-			this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
-		} else {
-			// No cache found at all
-			await getFresh();
-		}
+			await this.responseLogging(config.logLevel, response!, customRequest.url);
 
-		await this.responseLogging(config.logLevel, response!, customRequest.url);
+			let processTextEventStream = false;
+			if (response?.headers.has('content-type') && response.headers.get('content-type') === 'text/event-stream') {
+				response.jsonEvents = new JsonEventStreamParser();
+				response.textEvents = new TextEventStreamParser();
 
-		return response!;
+				processTextEventStream = true;
+			}
+
+			mainResolve(response!);
+
+			if (processTextEventStream) {
+				// TODO: Streaming support
+				new Promise<void>(async (resolve, reject) => {
+					try {
+						let accumulatedData = '';
+						// @ts-ignore
+						for await (const chunk of response!.body!) {
+							const decodedChunk = new TextDecoder('utf-8').decode(chunk, { stream: true });
+							accumulatedData += decodedChunk;
+
+							let newlineIndex;
+							while ((newlineIndex = accumulatedData.indexOf('\n')) >= 0) {
+								// Found a newline
+								const line = accumulatedData.slice(0, newlineIndex).trim();
+								accumulatedData = accumulatedData.slice(newlineIndex + 1); // Remove the processed line from the accumulated data
+
+								const colonIndex = line.indexOf(':');
+								if (colonIndex !== -1) {
+									const eventName = line.substring(0, colonIndex).trim();
+									const eventData = line.substring(colonIndex + 1).trim();
+
+									// Process and emit the event
+									if (eventName && eventData) {
+										try {
+											// See if it's JSON
+											const decodedJson = JSON.parse(eventData);
+											// Return JSON
+											response!.jsonEvents?.emit(eventName, decodedJson);
+										} catch (error) {
+											// Not valid JSON - just ignore and move on
+										} finally {
+											// Return string
+											response!.textEvents?.emit(eventName, eventData);
+										}
+									}
+								}
+							}
+						}
+					} catch (error) {
+						reject(error);
+					} finally {
+						response!.jsonEvents?.emit('end');
+						response!.textEvents?.emit('end');
+						resolve();
+					}
+				});
+			}
+		});
 	}
 }

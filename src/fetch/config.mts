@@ -1,3 +1,5 @@
+import { FetchHoleConfig } from './types.js';
+
 /**
  * Enumerates types of caches which can be set up with FetchHole.
  */
@@ -27,26 +29,11 @@ export enum LoggingLevel {
 }
 
 /**
- * Main FetchHole configuration shape.
- */
-export interface FetchHoleConfig {
-	cacheType: CacheType;
-	redirectCount: number;
-	logLevel: LoggingLevel;
-}
-
-/**
  * Default configuration.
  */
 export const defaultConfig = {
 	cacheType: CacheType.Default,
-	redirectCount: 20,
+	hardFail: true,
 	logLevel: LoggingLevel.INFO,
+	redirectCount: 20,
 } satisfies FetchHoleConfig;
-
-/**
- * Combined `fetch` configuration which includes a `fetchHole` property.
- */
-export interface FetchHoleFetchConfig extends RequestInit {
-	fetchHole: FetchHoleConfig;
-}

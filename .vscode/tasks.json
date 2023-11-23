@@ -7,7 +7,8 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"isBackground": true
 		},
 		{
 			"label": "build",
@@ -15,7 +16,54 @@
 			"type": "npm",
 			"script": "build:watch",
 			"presentation": {
-				"group": "compile"
+				"group": "build"
+			},
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true
+		},
+		{
+			"label": "TS Test",
+			"dependsOn": ["doh", "fetch", "memoryCache"],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"isBackground": true
+		},
+		{
+			"label": "doh",
+			"type": "npm",
+			"script": "test -- --watch ./test/doh.test.mts",
+			"isBackground": true,
+			"group": {
+				"kind": "test"
+			},
+			"presentation": {
+				"group": "test"
+			}
+		},
+		{
+			"label": "fetch",
+			"type": "npm",
+			"script": "test -- --watch ./test/fetch.test.mts",
+			"isBackground": true,
+			"group": {
+				"kind": "test"
+			},
+			"presentation": {
+				"group": "test"
+			}
+		},
+		{
+			"label": "memoryCache",
+			"type": "npm",
+			"script": "test -- --watch ./test/memoryCache.test.mts",
+			"isBackground": true,
+			"group": {
+				"kind": "test"
+			},
+			"presentation": {
+				"group": "test"
 			}
 		}
 	]

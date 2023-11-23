@@ -5,7 +5,7 @@ import { DohResolver } from '../dist/fetch/doh/doh.mjs';
 describe('DohResolver Tests', () => {
 	const resolversToCheck = new Map<string, `${string}/${string}`>([
 		['https://dns.google/resolve', 'application/dns-json'],
-		// ['https://dns.google/dns-query', 'application/dns-message'],
+		['https://dns.google/dns-query', 'application/dns-message'],
 		['https://cloudflare-dns.com/dns-query', 'application/dns-json'],
 		// ['https://cloudflare-dns.com/dns-query', 'application/message'],
 	]);

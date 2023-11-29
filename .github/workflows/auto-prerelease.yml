@@ -137,83 +137,83 @@ jobs:
         with:
           paths: test-output.xml
           show: all
-  # tag:
-  #   needs: [detect, test]
-  #   if: needs.detect.outputs.pr == 'none'
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #   outputs:
-  #     npm-version-new-tag: ${{ steps.npm-version.outputs.NEW_TAG }}
-  #     commit_sha: ${{ steps.tag_sha.outputs.commit_sha }}
-  #   steps:
-  #     - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-  #       with:
-  #         disable-sudo: true
-  #         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-  #       with:
-  #         fetch-depth: 0 # Important to fetch all history for versioning
-  #     - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
-  #       with:
-  #         node-version: lts/*
-  #         check-latest: true
-  #         cache: npm
-  #     - name: Git Setup
-  #       run: |
-  #         git config user.name "github-actions[bot]"
-  #         git config user.email "github-actions[bot]@users.noreply.github.com"
-  #     - run: echo "NEW_TAG=$(npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
-  #       id: npm-version
-  #     - run: git push --follow-tags
-  #     - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-  #       id: tag_sha
-  # release:
-  #   needs: [detect, tag]
-  #   if: needs.detect.outputs.pr == 'none'
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #   steps:
-  #     - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-  #       with:
-  #         disable-sudo: true
-  #         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-  #     - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-  #     - run: zip -r ${{ github.workspace }}/dist.zip ${{ github.workspace }}/dist LICENSE README.md
-  #     - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
-  #       with:
-  #         prerelease: true
-  #         files: |
-  #           ${{ github.workspace }}/dist.zip
-  #         tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
-  #         fail_on_unmatched_files: true
-  #         generate_release_notes: true
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # publish:
-  #   needs: [detect, tag, release]
-  #   if: needs.detect.outputs.pr == 'none'
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     id-token: write
-  #   steps:
-  #     - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-  #       with:
-  #         disable-sudo: true
-  #         egress-policy: audit
-  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-  #       with:
-  #         ref: ${{ needs.tag.outputs.commit_sha }}
-  #     - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
-  #     - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
-  #       with:
-  #         node-version: lts/*
-  #         check-latest: true
-  #         cache: npm
-  #         registry-url: 'https://registry.npmjs.org'
-  #     - run: npm publish --tag ${{ github.ref_name }} --provenance
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  tag:
+    needs: [detect, test]
+    if: needs.detect.outputs.pr == 'none'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      npm-version-new-tag: ${{ steps.npm-version.outputs.NEW_TAG }}
+      commit_sha: ${{ steps.tag_sha.outputs.commit_sha }}
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0 # Important to fetch all history for versioning
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+      - name: Git Setup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - run: echo "NEW_TAG=$(npm version ${{ inputs.semver || 'prerelease' }} --preid=${{ github.ref_name }})" >> $GITHUB_OUTPUT
+        id: npm-version
+      - run: git push --follow-tags
+      - run: echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        id: tag_sha
+  release:
+    needs: [detect, tag]
+    if: needs.detect.outputs.pr == 'none'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - run: zip -r ${{ github.workspace }}/dist.zip ${{ github.workspace }}/dist LICENSE README.md
+      - uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
+        with:
+          prerelease: true
+          files: |
+            ${{ github.workspace }}/dist.zip
+          tag_name: ${{ needs.tag.outputs.npm-version-new-tag }}
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish:
+    needs: [detect, tag, release]
+    if: needs.detect.outputs.pr == 'none'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
+        with:
+          disable-sudo: true
+          egress-policy: audit
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          ref: ${{ needs.tag.outputs.commit_sha }}
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm publish --tag ${{ github.ref_name }} --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

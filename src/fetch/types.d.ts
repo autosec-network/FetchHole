@@ -1,3 +1,4 @@
+import { type CacheType, type LoggingLevel } from './config.mjs';
 import { type JsonEventStreamParser, type TextEventStreamParser } from './eventStreamParser.mjs';
 
 /**

@@ -125,13 +125,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test -- --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-output.xml ${{ steps.find-tests.outputs.test-files }}
-      # - uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4 # v1.7.0
-      #   if: always()
-      #   with:
-      #     name: '${{ github.job }} (${{ matrix.os }}, ${{ matrix.version }})'
-      #     path: test-output.xml
-      #     reporter: 'jest-junit'
-      #     max-annotations: 50
+      - uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4 # v1.7.0
+        if: always()
+        with:
+          name: '${{ github.job }} (${{ matrix.os }}, ${{ matrix.version }})'
+          path: test-output.xml
+          reporter: 'jest-junit'
+          max-annotations: 50
       - uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f # v2.1
         if: always()
         with:

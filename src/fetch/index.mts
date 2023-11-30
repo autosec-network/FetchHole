@@ -7,11 +7,11 @@ import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from '
 const chalk = new Chalk({ level: 1 });
 
 export class FetchHole {
-	private memCache = new MemoryCache();
-	// private diskCache?: CacheStorage;
+	protected memCache = new MemoryCache();
+	// protected diskCache?: CacheStorage;
 
 	/** Effective configuration. */
-	private config: FetchHoleConfig;
+	protected config: FetchHoleConfig;
 
 	constructor(config: Partial<FetchHoleConfig> = {}) {
 		this.config = {
@@ -20,7 +20,7 @@ export class FetchHole {
 		};
 	}
 
-	private configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}): FetchHoleConfig {
+	protected configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}): FetchHoleConfig {
 		let fetchHoleConfig: Partial<FetchHoleConfig>;
 
 		if ('fetchHole' in overrides) {
@@ -37,7 +37,7 @@ export class FetchHole {
 		};
 	}
 
-	private logWriter(level: LoggingLevel, info: any[], verbose?: any[], debug?: any[]) {
+	protected logWriter(level: LoggingLevel, info: any[], verbose?: any[], debug?: any[]) {
 		if (level > LoggingLevel.OFF) {
 			let callable = console.info;
 			if (level > LoggingLevel.INFO) {
@@ -51,12 +51,12 @@ export class FetchHole {
 	/**
 	 * Removes the `body` property from a RequestInit object to reduce verbosity when logging.
 	 *
-	 * @private
+	 * @protected
 	 * @param {FetchHoleFetchConfig} [init={}] - The RequestInit object from which to remove the 'body' property. If not provided, an empty object will be used.
 	 *
 	 * @returns {FetchHoleFetchConfig} The updated RequestInit object without the 'body' property.
 	 */
-	private initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
+	protected initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
 		const config = this.configForCall(init);
 
 		if (config.logLevel < LoggingLevel.DEBUG) {
@@ -72,12 +72,12 @@ export class FetchHole {
 	/**
 	 * Asynchronously logs detailed information about a response, excluding its body to prevent log spam.
 	 *
-	 * @private
+	 * @protected
 	 * @param {Response} response - The response to log.
 	 *
 	 * @returns {Promise<void>} A Promise that resolves when the logging is complete.
 	 */
-	private async responseLogging(level: LoggingLevel, response: Response, url?: RequestInfo | URL): Promise<void> {
+	protected async responseLogging(level: LoggingLevel, response: Response, url?: RequestInfo | URL): Promise<void> {
 		const responseInfo: Record<string, any> = {
 			headers: Object.fromEntries(response.headers.entries()),
 			status: response.status,
@@ -100,7 +100,7 @@ export class FetchHole {
 		this.logWriter(level, [response.ok ? chalk.green('Fetch response') : chalk.red('Fetch response'), response.ok], [response.ok ? chalk.green(response.url || url?.toString()) : chalk.red(response.url || url?.toString()), JSON.stringify(responseInfo, null, '\t')]);
 	}
 
-	private getFresh(destination: Parameters<typeof this.fetch>[0], config: FetchHoleConfig, customRequest: Request, initToSend: RequestInit) {
+	protected getFresh(destination: Parameters<typeof this.fetch>[0], config: FetchHoleConfig, customRequest: Request, initToSend: RequestInit) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
 			if (config.cacheType != CacheType.Default) {
 				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);

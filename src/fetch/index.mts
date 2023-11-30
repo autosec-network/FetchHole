@@ -87,7 +87,7 @@ export class FetchHole {
 		};
 		if (level == LoggingLevel.DEBUG) {
 			try {
-				responseInfo.body = await response.clone().formData();
+				responseInfo.body = Object.fromEntries((await response.clone().formData()).entries());
 			} catch (error) {
 				try {
 					responseInfo.body = await response.clone().json();

@@ -109,7 +109,7 @@ export class FetchHole {
 	 * @throws {GraphQLError} If an unsafe redirect is encountered (i.e., a redirect to a different origin) and hardFail is set to true, or if the fetch fails for any other reason and hardFail is set to true.
 	 */
 	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0): Promise<StreamableResponse> {
-		return new Promise<StreamableResponse>(async (mainResolve, _mainReject) => {
+		return new Promise<StreamableResponse>(async (mainResolve, mainReject) => {
 			const config = this.configForCall(init);
 
 			const initToSend: RequestInit = {
@@ -141,38 +141,45 @@ export class FetchHole {
 				// TODO Disk
 			}
 
-			const getFresh = async () => {
-				if (config.cacheType != CacheType.Default) {
-					this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
-				}
-
-				response = (await fetch(customRequest, initToSend)) as StreamableResponse;
-
-				if (response.ok) {
-					// Append missing headers
-					if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
-						// TODO: Generate Content-Length
-						// TODO: Generate ETag
+			const getFresh = () => {
+				return new Promise<void>((resolve, reject) => {
+					if (config.cacheType != CacheType.Default) {
+						this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
 					}
 
-					// TODO: Save to cache
-				} else if ([301, 302, 303, 307, 308].includes(response.status)) {
-					// TODO: Redirect
-					// https://fetch.spec.whatwg.org/#http-redirect-fetch
-				} else {
-					await this.responseLogging(config.logLevel, response!, customRequest.url);
+					fetch(customRequest, initToSend)
+						.then(async (incomingResponse: StreamableResponse) => {
+							if (incomingResponse.ok) {
+								// Append missing headers
+								if (incomingResponse?.headers.has('content-type') && !(incomingResponse.headers.get('content-type')?.includes('stream') || incomingResponse.headers.get('content-type')?.includes('multipart'))) {
+									// TODO: Generate Content-Length
+									// TODO: Generate ETag
+								}
 
-					if (config.hardFail) {
-						let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-						if (config.logLevel > LoggingLevel.INFO) {
-							errorMsg += ` for ${destination}`;
-						}
-						throw new Error(errorMsg);
-					} else {
-						this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [destination]);
-					}
-					return;
-				}
+								// TODO: Save to cache
+
+								response = incomingResponse;
+							} else if ([301, 302, 303, 307, 308].includes(incomingResponse.status)) {
+								// TODO: Redirect
+								// https://fetch.spec.whatwg.org/#http-redirect-fetch
+							} else {
+								await this.responseLogging(config.logLevel, incomingResponse!, customRequest.url);
+
+								if (config.hardFail) {
+									let errorMsg = `HTTP ${incomingResponse.status}: ${incomingResponse.statusText}`;
+									if (config.logLevel > LoggingLevel.INFO) {
+										errorMsg += ` for ${destination}`;
+									}
+									reject(new Error(errorMsg));
+								} else {
+									this.logWriter(config.logLevel, [chalk.red(`HTTP ${incomingResponse.status}: ${incomingResponse.statusText}`)], [destination]);
+									resolve();
+								}
+							}
+							resolve();
+						})
+						.catch(reject);
+				});
 			};
 
 			if (response) {
@@ -180,7 +187,11 @@ export class FetchHole {
 				this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
 			} else {
 				// No cache found at all
-				await getFresh();
+				try {
+					await getFresh();
+				} catch (error) {
+					mainReject(error);
+				}
 			}
 
 			await this.responseLogging(config.logLevel, response!, customRequest.url);

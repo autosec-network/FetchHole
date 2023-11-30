@@ -38,12 +38,14 @@ export class FetchHole {
 	}
 
 	private logWriter(level: LoggingLevel, info: any[], verbose?: any[], debug?: any[]) {
-		let callable = console.info;
-		if (level > LoggingLevel.INFO) {
-			callable = console.debug;
+		if (level > LoggingLevel.OFF) {
+			let callable = console.info;
+			if (level > LoggingLevel.INFO) {
+				callable = console.debug;
+			}
+			const args = [...info, ...(verbose || []), ...(debug || [])];
+			callable.apply(console, args);
 		}
-		const args = [...info, ...(verbose || []), ...(debug || [])];
-		callable.apply(console, args);
 	}
 
 	/**

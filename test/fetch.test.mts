@@ -31,6 +31,8 @@ describe('Fetch Tests', () => {
 		strictEqual(typeof JSON.stringify(json), 'string');
 	});
 
+	// Same url, but with a redirect
+
 	it('should fetch data successfully', async () => {
 		const response = await fetchHole.fetch('https://tinyurl.com/mtyrsvr', {
 			fetchHole: {

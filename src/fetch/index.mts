@@ -92,7 +92,11 @@ export class FetchHole {
 				try {
 					responseInfo.body = await response.clone().json();
 				} catch (error) {
-					responseInfo.body = await response.clone().text();
+					try {
+						responseInfo.body = await response.clone().text();
+					} catch (error) {
+						responseInfo.body = 'Body is not text-parseable';
+					}
 				}
 			}
 		}

@@ -84,7 +84,15 @@ export class FetchHole {
 			type: response.type,
 		};
 		if (level == LoggingLevel.DEBUG) {
-			responseInfo.body = await response.clone().text();
+			try {
+				responseInfo.body = await response.clone().formData();
+			} catch (error) {
+				try {
+					responseInfo.body = await response.clone().json();
+				} catch (error) {
+					responseInfo.body = await response.clone().text();
+				}
+			}
 		}
 
 		this.logWriter(level, [response.ok ? chalk.green('Fetch response') : chalk.red('Fetch response'), response.ok], [response.ok ? chalk.green(response.url || url?.toString()) : chalk.red(response.url || url?.toString()), JSON.stringify(responseInfo, null, '\t')]);

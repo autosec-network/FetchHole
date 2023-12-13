@@ -18,8 +18,8 @@ describe('DohResolver Tests', () => {
 		},
 	];
 
-	resolversToCheck.forEach((resolverRecord) => {
-		Object.entries(resolverRecord).forEach(([resolverURL, ct]) => {
+	for (const resolverRecord of resolversToCheck) {
+		for (const [resolverURL, ct] of Object.entries(resolverRecord)) {
 			let dohResolver: DohResolver;
 
 			describe(`Tests with resolver ${resolverURL} using ${ct}`, () => {
@@ -29,6 +29,7 @@ describe('DohResolver Tests', () => {
 
 				it('should handle valid inputs and return a successful response', async () => {
 					const response = await dohResolver.query({ name: 'github.com', ct });
+					console.debug(resolverURL, ct, response);
 
 					// Assert that the response contains the required properties of DohSuccessfulResponse
 					strictEqual(typeof response.Status, 'number');
@@ -80,6 +81,6 @@ describe('DohResolver Tests', () => {
 					// }
 				});
 			});
-		});
-	});
+		}
+	}
 });

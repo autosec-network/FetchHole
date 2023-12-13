@@ -56,33 +56,33 @@ describe('DohResolver Tests', () => {
 							strictEqual(typeof answer.data, 'string');
 						}
 					}
-					// if (response.Authority) {
-					// 	ok(Array.isArray(response.Authority));
-					// 	for (const authority of response.Authority) {
-					// 		strictEqual(typeof authority.name, 'string');
-					// 		ok(['string', 'number'].includes(typeof authority.type));
-					// 		strictEqual(typeof authority.TTL, 'number');
-					// 		strictEqual(typeof authority.data, 'string');
-					// 	}
-					// }
-					// if (response.Additional) {
-					// 	ok(Array.isArray(response.Additional));
-					// 	for (const additional of response.Additional) {
-					// 		strictEqual(typeof additional.name, 'string');
-					// 		ok(['string', 'number'].includes(typeof additional.type));
-					// 		strictEqual(typeof additional.TTL, 'number');
-					// 		strictEqual(typeof additional.data, 'string');
-					// 	}
-					// }
-					// if (response.Comment) {
-					// 	if (Array.isArray(response.Comment)) {
-					// 		for (const c of response.Comment) {
-					// 			strictEqual(typeof c, 'string');
-					// 		}
-					// 	} else {
-					// 		strictEqual(typeof response.Comment, 'string');
-					// 	}
-					// }
+					if (response.Authority) {
+						ok(Array.isArray(response.Authority));
+						for (const authority of response.Authority) {
+							strictEqual(typeof authority.name, 'string');
+							ok(['string', 'number'].includes(typeof authority.type));
+							strictEqual(typeof authority.TTL, 'number');
+							strictEqual(typeof authority.data, 'string');
+						}
+					}
+					if (response.Additional) {
+						ok(Array.isArray(response.Additional));
+						for (const additional of response.Additional) {
+							strictEqual(typeof additional.name, 'string');
+							ok(['string', 'number'].includes(typeof additional.type));
+							strictEqual(typeof additional.TTL, 'number');
+							strictEqual(typeof additional.data, 'string');
+						}
+					}
+					if (response.Comment) {
+						if (Array.isArray(response.Comment)) {
+							for (const c of response.Comment) {
+								strictEqual(typeof c, 'string');
+							}
+						} else {
+							strictEqual(typeof response.Comment, 'string');
+						}
+					}
 				});
 			});
 		}

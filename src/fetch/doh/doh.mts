@@ -1,8 +1,11 @@
-// @ts-ignore
-import { CHECKING_DISABLED, DNSSEC_OK, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
+import { CHECKING_DISABLED, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { randomInt } from 'node:crypto';
 import type { DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.js';
+
+// @ts-ignore
+import { DNSSEC_OK } from 'dns-packet';
+// https://github.com/mafintosh/dns-packet/blob/master/index.js#L1655 It is exported, but the type doesn't show it. Tracked: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/67884
 
 export class DohResolver {
 	private nameserver_url: URL;

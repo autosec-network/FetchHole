@@ -1,3 +1,5 @@
+import type { RecordType } from 'dns-packet';
+
 export type ExcludeUndefined<T> = T extends undefined ? never : T;
 
 export interface DohRequest {
@@ -9,7 +11,7 @@ export interface DohRequest {
 	 * RR type can be represented as a number in [1, 65535] or a canonical string (case-insensitive, such as A or aaaa). You can use 255 for 'ANY' queries but be aware that this is not a replacement for sending queries for both A and AAAA or MX records. Authoritative name servers need not return all records for such queries; some do not respond, and others (such as cloudflare.com) return only HINFO.
 	 * @default `1` or `A`
 	 */
-	type?: string | number;
+	type?: RecordType;
 	/**
 	 * The CD (Checking Disabled) flag. Use cd=1, or cd=true to disable DNSSEC validation; use cd=0, cd=false, or no cd parameter to enable DNSSEC validation.
 	 * @default false

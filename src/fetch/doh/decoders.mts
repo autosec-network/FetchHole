@@ -2,7 +2,13 @@ import { Buffer } from 'node:buffer';
 
 export class DohWireframeDecoders {
 	public static parseIPv4Address(buffer: Buffer, offset: number): string {
-		return Array.from({ length: 4 }, (_, i) => buffer[offset + i].toString()).join('.');
+		return Array.from({ length: 4 }, (_, i) => {
+			const byte = buffer[offset + i];
+			if (byte === undefined) {
+				throw new Error('Invalid buffer length for IPv4 address parsing.');
+			}
+			return byte.toString();
+		}).join('.');
 	}
 
 	public static parseIPv6Address(buffer: Buffer, offset: number): string {

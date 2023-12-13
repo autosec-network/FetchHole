@@ -51,8 +51,8 @@ export class DohResolver {
 				};
 
 				if (question.flags) {
-					if (parameters.cd) question.flags |= CHECKING_DISABLED;
-					if (parameters.do) question.flags |= DNSSEC_OK;
+					if ('cd' in parameters && Boolean(parameters.cd)) question.flags |= CHECKING_DISABLED;
+					if ('do' in parameters && Boolean(parameters.do)) question.flags |= DNSSEC_OK;
 				}
 
 				if (parameters.random_padding) {

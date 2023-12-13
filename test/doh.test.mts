@@ -17,6 +17,9 @@ describe('DohResolver Tests', () => {
 		{
 			'https://cloudflare-dns.com/dns-query': 'application/dns-message',
 		},
+		{
+			'https://dns.quad9.net/dns-query': 'application/dns-message',
+		},
 	];
 
 	for (const resolverRecord of resolversToCheck) {

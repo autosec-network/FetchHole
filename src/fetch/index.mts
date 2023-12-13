@@ -87,15 +87,15 @@ export class FetchHole {
 		};
 		if (level == LoggingLevel.DEBUG) {
 			try {
-				responseInfo.body = Object.fromEntries((await response.clone().formData()).entries());
+				responseInfo['body'] = Object.fromEntries((await response.clone().formData()).entries());
 			} catch (error) {
 				try {
-					responseInfo.body = await response.clone().json();
+					responseInfo['body'] = await response.clone().json();
 				} catch (error) {
 					try {
-						responseInfo.body = await response.clone().text();
+						responseInfo['body'] = await response.clone().text();
 					} catch (error) {
-						responseInfo.body = 'Body is not text-parseable';
+						responseInfo['body'] = 'Body is not text-parseable';
 					}
 				}
 			}

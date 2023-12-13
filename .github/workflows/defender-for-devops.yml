@@ -41,6 +41,6 @@ jobs:
           cache: npm
       - uses: microsoft/security-devops-action@7e3060ae1e6a9347dd7de6b28195099f39852fe2 # v1.10.0
         id: msdo
-      - uses: github/codeql-action/upload-sarif@407ffafae6a767df3e0230c3df91b6443ae8df75 # v2.22.8
+      - uses: github/codeql-action/upload-sarif@b374143c1149a9115d881581d29b8390bbcbb59c # v3.22.11
         with:
           sarif_file: ${{ steps.msdo.outputs.sarifFile }}

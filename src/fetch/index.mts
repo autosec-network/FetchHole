@@ -104,6 +104,22 @@ export class FetchHole {
 		this.logWriter(level, [response.ok ? chalk.green('Fetch response') : chalk.red('Fetch response'), response.ok], [response.ok ? chalk.green(response.url || url?.toString()) : chalk.red(response.url || url?.toString()), JSON.stringify(responseInfo, null, '\t')]);
 	}
 
+	protected headerProcessing(response: StreamableResponse): StreamableResponse {
+		if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
+			// Body related headers here
+
+			if (!response.headers.has('Content-Length')) {
+				// TODO
+			}
+
+			if (!response.headers.has('ETag')) {
+				// TODO
+			}
+		} else {
+			// Other headers
+		}
+	}
+
 	protected getFresh(destination: Parameters<typeof this.fetch>[0], config: FetchHoleConfig, customRequest: Request, initToSend: RequestInit) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
 			if (config.cacheType != CacheType.Default) {
@@ -113,11 +129,7 @@ export class FetchHole {
 			fetch(customRequest, initToSend)
 				.then(async (response: StreamableResponse) => {
 					if (response.ok) {
-						// Append missing headers
-						if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
-							// TODO: Generate Content-Length
-							// TODO: Generate ETag
-						}
+						response = this.headerProcessing(response);
 
 						// TODO: Save to cache
 

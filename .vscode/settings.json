@@ -1,8 +1,19 @@
 {
 	"editor.formatOnSave": true,
 	"editor.codeActionsOnSave": {
-		"source.organizeImports": true
+		"source.fixAll": "explicit",
+		"source.organizeImports": "explicit"
 	},
 	"github-actions.workflows.pinned.refresh.enabled": true,
-	"github-actions.workflows.pinned.workflows": [".github/workflows/auto-prerelease.yml"]
+	"github-actions.workflows.pinned.workflows": [".github/workflows/auto-prerelease.yml"],
+	"typescript.tsdk": "./node_modules/typescript/lib",
+	"yaml.schemas": {
+		"https://json.schemastore.org/dependabot-2.0.json": "${workspaceFolder}/.github/dependabot.yml"
+	},
+	"json.schemas": [
+		{
+			"fileMatch": ["**/devcontainer.json"],
+			"url": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json"
+		}
+	]
 }

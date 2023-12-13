@@ -118,6 +118,8 @@ export class FetchHole {
 		} else {
 			// Other headers
 		}
+
+		return response;
 	}
 
 	protected getFresh(destination: Parameters<typeof this.fetch>[0], config: FetchHoleConfig, customRequest: Request, initToSend: RequestInit) {

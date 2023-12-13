@@ -1,3 +1,4 @@
+import { type CacheType, type LoggingLevel } from './config.mjs';
 import { type JsonEventStreamParser, type TextEventStreamParser } from './eventStreamParser.mjs';
 
 /**
@@ -31,7 +32,7 @@ export interface FetchHoleConfig {
  * Combined `fetch` configuration which includes a `fetchHole` property.
  */
 export interface FetchHoleFetchConfig extends RequestInit {
-	fetchHole?: FetchHoleConfig;
+	fetchHole?: Partial<FetchHoleConfig>;
 }
 
 interface StreamChunkEvents {

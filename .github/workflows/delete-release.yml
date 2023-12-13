@@ -5,6 +5,9 @@ on:
     types:
       - deleted
 
+permissions:
+  contents: read
+
 jobs:
   manage-npm-version:
     runs-on: ubuntu-latest

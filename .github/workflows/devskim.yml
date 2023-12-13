@@ -11,6 +11,9 @@ on:
   schedule:
     - cron: '0 0 * * 0'
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: DevSkim
@@ -22,9 +25,10 @@ jobs:
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
         with:
+          disable-sudo: true
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: microsoft/DevSkim-Action@b41921d947434b27f90b8949f8bfbe056e706bf6 # v1.0.11
-      - uses: github/codeql-action/upload-sarif@66b90a5db151a8042fa97405c6cf843bbe433f7b # v2.22.7
+      - uses: github/codeql-action/upload-sarif@b374143c1149a9115d881581d29b8390bbcbb59c # v3.22.11
         with:
           sarif_file: devskim-results.sarif

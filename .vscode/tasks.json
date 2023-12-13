@@ -4,11 +4,14 @@
 		{
 			"label": "TS Build",
 			"dependsOn": ["build"],
+			"isBackground": true,
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			},
-			"isBackground": true
+			"runOptions": {
+				"runOn": "folderOpen"
+			}
 		},
 		{
 			"label": "build",

@@ -1,9 +1,10 @@
 import { ok, strictEqual } from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { DohResolver } from '../dist/fetch/doh/doh.mjs';
+import type { DohRequest } from '../src/fetch/doh/types.d.ts';
 
 describe('DohResolver Tests', () => {
-	const resolversToCheck: Record<string, `${string}/${string}`>[] = [
+	const resolversToCheck: Record<string, DohRequest['ct']>[] = [
 		{
 			'https://dns.google/resolve': 'application/dns-json',
 		},

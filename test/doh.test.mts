@@ -7,7 +7,7 @@ describe('DohResolver Tests', () => {
 		['https://dns.google/resolve', 'application/dns-json'],
 		['https://dns.google/dns-query', 'application/dns-message'],
 		['https://cloudflare-dns.com/dns-query', 'application/dns-json'],
-		// ['https://cloudflare-dns.com/dns-query', 'application/message'],
+		['https://cloudflare-dns.com/dns-query', 'application/dns-message'],
 	]);
 
 	for (const [resolverURL, ct] of resolversToCheck.entries()) {

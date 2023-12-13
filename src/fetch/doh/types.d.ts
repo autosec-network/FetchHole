@@ -8,8 +8,8 @@ export interface DohRequest {
 	 */
 	name: string;
 	/**
-	 * RR type can be represented as a number in [1, 65535] or a canonical string (case-insensitive, such as A or aaaa). You can use 255 for 'ANY' queries but be aware that this is not a replacement for sending queries for both A and AAAA or MX records. Authoritative name servers need not return all records for such queries; some do not respond, and others (such as cloudflare.com) return only HINFO.
-	 * @default `1` or `A`
+	 * RR type can be represented as a canonical string. You can use 'ANY' queries but be aware that this is not a replacement for sending queries for both A and AAAA or MX records. Authoritative name servers need not return all records for such queries; some do not respond, and others (such as cloudflare.com) return only HINFO.
+	 * @default `A`
 	 */
 	type?: RecordType;
 	/**

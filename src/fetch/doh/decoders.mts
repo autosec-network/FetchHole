@@ -12,9 +12,29 @@ export class DohWireframeDecoders {
 	}
 
 	public static parseIPv6Address(buffer: Buffer, offset: number): string {
-		return Array.from({ length: 16 }, (_, i) => buffer[offset + i].toString(16).padStart(2, '0'))
-			.reduce((acc, value, index) => acc + (index % 2 ? ':' : '') + value, '')
-			.replace(/(:0)+:/, '::'); // Compress zeros
+		if (offset < 0 || offset + 15 >= buffer.length) {
+			throw new Error('Invalid offset or buffer length.');
+		}
+
+		const hexArray = [];
+		for (let i = 0; i < 16; i++) {
+			const byte = buffer[offset + i];
+			if (byte === undefined) {
+				throw new Error(`Buffer byte at position ${offset + i} is undefined.`);
+			}
+			hexArray.push(byte.toString(16).padStart(2, '0'));
+		}
+
+		let ipv6 = hexArray.reduce((acc, value, index) => acc + (index % 2 ? ':' : '') + value, '');
+
+		// Find and replace the longest sequence of zeros with "::"
+		const zeroGroups = ipv6.match(/(:0)+(?=:)/g);
+		if (zeroGroups) {
+			const longestZeroGroup = zeroGroups.reduce((a, b) => (a.length > b.length ? a : b));
+			ipv6 = ipv6.replace(longestZeroGroup + ':', '::');
+		}
+
+		return ipv6;
 	}
 
 	/**

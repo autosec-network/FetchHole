@@ -62,6 +62,15 @@ export class FetchHole {
 	protected initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
 		const config = this.configForCall(init);
 
+		if (config.logLevel >= LoggingLevel.DEBUG) {
+			init = {
+				...init,
+				...{
+					fetchHole: config,
+				},
+			};
+		}
+
 		if (config.logLevel < LoggingLevel.DEBUG) {
 			if ('cf' in init) {
 				delete init['cf'];

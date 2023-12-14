@@ -201,6 +201,25 @@ export class FetchHole {
 
 	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, response: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {
 		// https://fetch.spec.whatwg.org/#http-redirect-fetch
+		/**
+		 * 1. **Start with a web request.** We have a request we're dealing with (let's call it `request`).
+		 * 2. **Determine the real response.** Sometimes responses are modified for security (filtered). We need to use the original (internal) response.
+		 * 3. **Get the redirect URL.** We look at the response to find out if and where it's redirecting us. This includes keeping any fragment identifiers (like the `#` part in URLs).
+		 * 4. **No redirect? Stop here.** If there's no redirect URL, we're done and just return the response as is.
+		 * 5. **Bad redirect URL? Error.** If the redirect URL is invalid or broken, we stop and report a network error.
+		 * 6. **Redirects must be HTTP(S).** If the redirect URL isn't a web address (http or https), that's an error.
+		 * 7. **Limit on redirects.** We can only follow up to 20 redirects in a row to prevent endless loops. Hit that limit, and it's a network error.
+		 * 8. **Count each redirect.** Each time we follow a redirect, we count it (up to that limit of 20).
+		 * 9. & 10. **Cross-Origin Rules.** If the request is trying to access resources from a different domain (cross-origin), there are strict rules. Especially if it involves credentials (like cookies or HTTP authentication). If these rules are broken, we return a network error.
+		 * 11. **Body and Status Checks.** If there's a certain type of status code (303) and the request has a body but no source, it's a network error.
+		 * 12. & 13. **Adjust Method and Headers for Cross-Origin.** Depending on the status and the request method, we might change the method to `GET` and drop the request body. If we're moving to a different origin, we also adjust the headers for security.
+		 * 14. **Handle the Request Body.** If there's a body in the request, we need to handle it correctly.
+		 * 15. to 17. **Timing for Debugging.** We keep track of timing for each phase of the request. This is useful for debugging and performance analysis.
+		 * 18. **Remember the URLs Visited.** We keep a list of URLs we've redirected through.
+		 * 19. **Handle Referrer Policy.** Adjust how much of the referrer information is passed along during a redirect.
+		 * 20. **Decide on Recursive Fetch.** Normally, we keep following redirects (recursive), unless it's a manual redirect.
+		 * 21. & 22. **Continue with Fetch.** Finally, we either do the redirect or return the result, depending on whether the redirect mode is manual or not.
+		 */
 		return new Promise<StreamableResponse>((resolve, reject) => {});
 	}
 

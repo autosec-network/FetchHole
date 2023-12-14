@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { MemoryCache } from '../cache/memoryCache.mjs';
 import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
+import { dropAuthRedirect, modifyRedirectRequest, responseTainted } from './extras.mjs';
 import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from './types.js';
 
 const chalk = new Chalk({ level: 1 });
@@ -199,7 +200,7 @@ export class FetchHole {
 		});
 	}
 
-	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, internalResponse: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {
+	protected handleRedirect(originalRequest: Request, requestSource: RequestInit, internalResponse: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {
 		// https://fetch.spec.whatwg.org/#http-redirect-fetch
 		/**
 		 * 1. **Start with a web request.** We have a request we're dealing with (let's call it `request`).
@@ -220,7 +221,92 @@ export class FetchHole {
 		 * 20. **Decide on Recursive Fetch.** Normally, we keep following redirects (recursive), unless it's a manual redirect.
 		 * 21. & 22. **Continue with Fetch.** Finally, we either do the redirect or return the result, depending on whether the redirect mode is manual or not.
 		 */
-		return new Promise<StreamableResponse>((resolve, reject) => {});
+		return new Promise<StreamableResponse>((resolve, reject) => {
+			// 2
+			if (originalRequest) {
+				const originalUrl = new URL(originalRequest.url);
+				// 4
+				if (internalResponse.headers.has('Location')) {
+					try {
+						// 3
+						const locationURL = new URL(internalResponse.headers.get('Location')!, originalUrl);
+						locationURL.hash = originalUrl.hash;
+						// 6
+						if (['http:', 'https:'].includes(locationURL.protocol.toLowerCase())) {
+							// 7
+							requestSource.redirect = config.redirectCount <= 0 ? 'error' : redirectCount == Number(config.redirectCount) ? 'error' : 'manual';
+							// 8
+							const newRedirectCount = redirectCount + 1;
+							// 9
+							if (originalRequest.mode == 'cors' && (locationURL.username !== '' || locationURL.password !== '') && originalUrl.origin !== locationURL.origin) {
+								reject(new Error('NetworkError', { cause: 'CORS request with credentials to a different origin is not allowed' }));
+							} else {
+								// 10
+								if (responseTainted(originalUrl.origin, internalResponse.headers) && (locationURL.username !== '' || locationURL.password !== '')) {
+									reject(new Error('NetworkError', { cause: 'CORS policy violation due to credentials in URL during a cross-origin to same-origin redirect' }));
+								} else {
+									// 11
+									if (internalResponse.status !== 303 && originalRequest.body !== null && requestSource.body === null) {
+										reject(new Error('NetworkError', { cause: 'Invalid state with non-303 status, non-null body, and null body source' }));
+									} else {
+										// 12
+										if (((internalResponse.status === 301 || internalResponse.status === 302) && originalRequest.method === 'POST') || (internalResponse.status === 303 && originalRequest.method !== 'GET' && originalRequest.method !== 'HEAD')) {
+											originalRequest = modifyRedirectRequest(originalRequest, requestSource);
+										}
+										// 13
+										if (originalUrl.origin !== locationURL.origin) {
+											originalRequest = dropAuthRedirect(originalRequest, requestSource);
+										}
+										// 14
+										if (originalRequest.body !== null) {
+											originalRequest = new Request(originalRequest, {
+												...requestSource,
+												method: originalRequest.method,
+												headers: originalRequest.headers,
+											});
+										}
+										// 15 - irrelevant since timing info is not done internally
+										// 16 - irrelevant since timing info is not done internally
+										// 17 - irrelevant since timing info is not done internally
+										// 18 - irrelevant since there is no url history
+										// 20 - irrelevant due to this class taking over
+										// 21 - irrelevant due to this class taking over
+										// 22
+										resolve(
+											this.fetch(
+												locationURL,
+												{
+													// Carry over
+													...requestSource,
+													// Override with anything touched above
+													mode: originalRequest.mode,
+													body: originalRequest.body,
+													method: originalRequest.method,
+													headers: originalRequest.headers,
+													// 19
+													referrerPolicy: originalRequest.referrerPolicy,
+												},
+												newRedirectCount,
+											),
+										);
+									}
+								}
+							}
+						} else {
+							reject(new Error('NetworkError', { cause: "locationURL's scheme is not HTTP or HTTPS" }));
+						}
+					} catch (error) {
+						// 5
+						reject(new Error('NetworkError', { cause: 'Failed to construct redirect URL' }));
+					}
+				} else {
+					// 4
+					reject(new Error('NetworkError', { cause: 'Redirect Location header is missing' }));
+				}
+			} else {
+				reject(originalRequest);
+			}
+		});
 	}
 
 	/**

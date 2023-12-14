@@ -24,7 +24,6 @@ describe('Fetch Tests', () => {
 		const response = await fetchHole.fetch('https://debug.demosjarco.workers.dev', {
 			fetchHole: {
 				logLevel: LoggingLevel.OFF,
-				redirectCount: 0,
 			},
 		});
 		const json = await response.json();

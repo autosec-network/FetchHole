@@ -164,7 +164,7 @@ export class FetchHole {
 		return response;
 	}
 
-	protected getFresh(destination: Parameters<typeof this.fetch>[0], config: FetchHoleConfig, customRequest: Request, initToSend: RequestInit) {
+	protected getFresh(customRequest: Request, config: FetchHoleConfig, initToSend: RequestInit) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
 			if (config.cacheType != CacheType.Default) {
 				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
@@ -187,11 +187,11 @@ export class FetchHole {
 						if (config.hardFail) {
 							let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
 							if (config.logLevel > LoggingLevel.INFO) {
-								errorMsg += ` for ${destination}`;
+								errorMsg += ` for ${customRequest.url}`;
 							}
 							reject(new Error(errorMsg));
 						} else {
-							this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [destination]);
+							this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [customRequest.url]);
 							resolve(response);
 						}
 					}
@@ -199,6 +199,8 @@ export class FetchHole {
 				.catch(reject);
 		});
 	}
+
+	protected handleRedirect(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0) {}
 
 	/**
 	 * Fetches a resource at a specified URL, with caching and redirect following features.
@@ -249,7 +251,7 @@ export class FetchHole {
 			} else {
 				// No cache found at all
 				try {
-					response = await this.getFresh(destination, config, customRequest, initToSend);
+					response = await this.getFresh(customRequest, config, initToSend);
 				} catch (error) {
 					mainReject(error);
 				}

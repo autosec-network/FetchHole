@@ -1,14 +1,36 @@
-// @ts-ignore
-import { CHECKING_DISABLED, DNSSEC_OK, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
+import { CHECKING_DISABLED, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { randomInt } from 'node:crypto';
-import type { DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.js';
+import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.js';
+
+// @ts-ignore
+import { DNSSEC_OK } from 'dns-packet';
+// https://github.com/mafintosh/dns-packet/blob/master/index.js#L1655 It is exported, but the type doesn't show it. Tracked: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/67884
 
 export class DohResolver {
 	private nameserver_url: URL;
 
 	constructor(nameserver_url: string | URL) {
 		this.nameserver_url = new URL(nameserver_url);
+	}
+
+	public static getReverseIpv4(ip: `${number}.${number}.${number}.${number}`) {
+		const parts = ip.split('.').reverse();
+		return parts.join('.') + '.in-addr.arpa';
+	}
+
+	public static getReverseIpv6(ip: string) {
+		const fullLength = 8;
+		const segments = ip.split(':');
+		const expandSegments = segments.map((segment) => segment.padStart(4, '0'));
+		const missingSegments = fullLength - expandSegments.length;
+		const zeroSegments = Array(missingSegments).fill('0000');
+
+		let expanded = [...expandSegments.slice(0, segments.indexOf('')), ...zeroSegments, ...expandSegments.slice(segments.indexOf(''))].join(':');
+		expanded = expanded.replace(/:/g, ''); // Remove colons
+		let reversed = expanded.split('').reverse().join(''); // Reverse the string
+		let dotted = reversed.split('').join('.'); // Insert dots
+		return dotted + '.ip6.arpa'; // Append suffix
 	}
 
 	private getRandomInt(min: number, max: number) {
@@ -24,8 +46,8 @@ export class DohResolver {
 		);
 	}
 
-	// public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse> {
-	public async query(parameters: DohRequest, timeout: number = 10 * 1000) {
+	// @ts-ignore
+	public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse | undefined> {
 		if (!('ct' in parameters)) {
 			if (this.nameserver_url.pathname === '/dns-query') {
 				parameters.ct = 'application/dns-message';
@@ -48,8 +70,8 @@ export class DohResolver {
 				};
 
 				if (question.flags) {
-					if (parameters.cd) question.flags |= CHECKING_DISABLED;
-					if (parameters.do) question.flags |= DNSSEC_OK;
+					if ('cd' in parameters && Boolean(parameters.cd)) question.flags |= CHECKING_DISABLED;
+					if ('do' in parameters && Boolean(parameters.do)) question.flags |= DNSSEC_OK;
 				}
 
 				if (parameters.random_padding) {

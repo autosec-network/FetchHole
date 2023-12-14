@@ -1,7 +1,7 @@
 import { CHECKING_DISABLED, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { randomInt } from 'node:crypto';
-import type { DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.js';
+import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.js';
 
 // @ts-ignore
 import { DNSSEC_OK } from 'dns-packet';
@@ -28,7 +28,7 @@ export class DohResolver {
 	}
 
 	// public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse> {
-	public async query(parameters: DohRequest, timeout: number = 10 * 1000) {
+	public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse | undefined> {
 		if (!('ct' in parameters)) {
 			if (this.nameserver_url.pathname === '/dns-query') {
 				parameters.ct = 'application/dns-message';

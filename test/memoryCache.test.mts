@@ -107,6 +107,31 @@ describe('MemoryCache Tests', () => {
 		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');
 	});
 
+	it('should add and retrieve POST items from cache', async () => {
+		// Simulate graphql query
+		const request = new Request('http://example.com/graphql', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `query {
+					${RandomResponseGenerator.generateRandomKey(10)}
+				}`,
+				variables: {
+					key: 'value',
+				},
+			}),
+		});
+		const response = RandomResponseGenerator.createResponse();
+
+		await memoryCache.put(request, response, { ignoreMethod: true });
+		const cachedResponse = await memoryCache.match(request, undefined, { ignoreMethod: true });
+
+		// Check if the response we get back is the same as what we put in.
+		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');
+	});
+
 	it('should not retrieve non-matching items from cache', async () => {
 		const request1 = new Request('http://example.com');
 		const request2 = new Request('http://example2.com');

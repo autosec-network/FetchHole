@@ -1,5 +1,5 @@
-import { type CacheType, type LoggingLevel } from './config.mjs';
-import { type JsonEventStreamParser, type TextEventStreamParser } from './eventStreamParser.mjs';
+import type { CacheType, LoggingLevel } from './config.mjs';
+import type { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 
 /**
  * An extension of the Response interface that includes event emitters for streaming text and JSON data.

@@ -129,7 +129,7 @@ export class FetchHole {
 				// Variable to calculate the content length
 				let length = 0;
 				// Create a hash object for ETag calculation if ETag header is missing
-				const hash = response.headers.has('ETag') ? null : createHash('md5');
+				const hash = response.headers.has('ETag') ? null : createHash('sha256');
 
 				while (true) {
 					// Read chunks from the stream

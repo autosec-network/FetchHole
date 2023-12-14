@@ -14,6 +14,11 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
+    groups:
+      artifacts:
+        patterns:
+          - 'actions/upload-artifact'
+          - 'actions/download-artifact'
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
@@ -23,6 +28,11 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-patch']
+    groups:
+      artifacts:
+        patterns:
+          - 'actions/upload-artifact'
+          - 'actions/download-artifact'
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

@@ -30,7 +30,13 @@ export abstract class CacheBase {
 
 	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.hashAlgorithm) {
 		const hash = createHash(hashAlgorithm);
-		hash.update(Buffer.from(await request.arrayBuffer()));
+
+		if (request.body) {
+			for await (const chunk of request.clone().body as any as AsyncIterable<Uint8Array | undefined>) {
+				hash.update(Buffer.from(chunk ?? ''));
+			}
+		}
+
 		return hash.digest('hex');
 	}
 

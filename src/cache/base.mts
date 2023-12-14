@@ -41,7 +41,7 @@ export abstract class CacheBase {
 			return false;
 		}
 		if ('method' in cachedFetch && 'method' in newFetch) {
-			if (cachedFetch.url !== newFetch.url || cachedFetch.method !== (ignoreMethod ? 'GET' : newFetch.method)) {
+			if (cachedFetch.url !== newFetch.url || (ignoreMethod ? 'GET' : cachedFetch.method) !== (ignoreMethod ? 'GET' : newFetch.method)) {
 				return false;
 			}
 		}

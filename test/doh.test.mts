@@ -63,15 +63,15 @@ describe('DohResolver Tests', () => {
 								strictEqual(typeof answer.data, 'string');
 							}
 						}
-						// if (response.Authority) {
-						// 	ok(Array.isArray(response.Authority));
-						// 	for (const authority of response.Authority) {
-						// 		strictEqual(typeof authority.name, 'string');
-						// 		ok(['string', 'number'].includes(typeof authority.type));
-						// 		strictEqual(typeof authority.TTL, 'number');
-						// 		strictEqual(typeof authority.data, 'string');
-						// 	}
-						// }
+						if (response.Authority) {
+							ok(Array.isArray(response.Authority));
+							for (const authority of response.Authority) {
+								strictEqual(typeof authority.name, 'string');
+								ok(['string', 'number'].includes(typeof authority.type));
+								strictEqual(typeof authority.TTL, 'number');
+								strictEqual(typeof authority.data, 'string');
+							}
+						}
 						// if (response.Additional) {
 						// 	ok(Array.isArray(response.Additional));
 						// 	for (const additional of response.Additional) {

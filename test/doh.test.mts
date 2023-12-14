@@ -4,7 +4,7 @@ import { DohResolver } from '../dist/fetch/doh/doh.mjs';
 import type { DohRequest } from '../src/fetch/doh/types.d.ts';
 
 describe('DohResolver Tests', () => {
-	const resolversToCheck: Record<string, DohRequest['ct']>[] = [
+	const resolversToCheck: Record<string, NonNullable<DohRequest['ct']>>[] = [
 		{
 			'https://dns.google/resolve': 'application/dns-json',
 		},

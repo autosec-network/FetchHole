@@ -4,16 +4,27 @@ import { CacheBase } from './base.mjs';
 export class MemoryCache extends CacheBase {
 	protected cache = new Map<Request['url'], Map<Request, Response>>();
 
-	public put(request: RequestInfo, response: Response): Promise<void> {
+	public put(request: RequestInfo, response: Response, options?: CacheQueryOptions): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (!(request instanceof Request)) {
 				request = new Request(request);
 			}
 
 			// Follow cache specs https://developers.cloudflare.com/workers/runtime-apis/cache/#invalid-parameters
-			if (request.method != 'GET') reject();
+			if (request.method != 'GET') {
+				if (options && 'ignoreMethod' in options && options.ignoreMethod) {
+				} else {
+					reject();
+				}
+			}
 			if (response.status == 206) reject();
-			if (response.headers.get('Vary') == '*') reject();
+			if (response.headers.get('Vary') == '*') {
+				if (options && 'ignoreVary' in options && options.ignoreVary) {
+				} else {
+					reject();
+				}
+			}
+			// TODO: cache.put returns a 413 error if Cache-Control instructs not to cache or if the response is too large.
 
 			if (response.ok) {
 				try {

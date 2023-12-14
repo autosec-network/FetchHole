@@ -92,7 +92,6 @@ describe('MemoryCache Tests', () => {
 		const cachedResponse = await memoryCache.match(request);
 
 		// Check if the response we get back is the same as what we put in.
-		// strictEqual(await cachedResponse?.text(), await response.text(), 'Cached response should match the original response');
 		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');
 	});
 

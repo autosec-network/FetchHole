@@ -14,6 +14,25 @@ export class DohResolver {
 		this.nameserver_url = new URL(nameserver_url);
 	}
 
+	public static getReverseIpv4(ip: `${number}.${number}.${number}.${number}`) {
+		const parts = ip.split('.').reverse();
+		return parts.join('.') + '.in-addr.arpa';
+	}
+
+	public static getReverseIpv6(ip: string) {
+		const fullLength = 8;
+		const segments = ip.split(':');
+		const expandSegments = segments.map((segment) => segment.padStart(4, '0'));
+		const missingSegments = fullLength - expandSegments.length;
+		const zeroSegments = Array(missingSegments).fill('0000');
+
+		let expanded = [...expandSegments.slice(0, segments.indexOf('')), ...zeroSegments, ...expandSegments.slice(segments.indexOf(''))].join(':');
+		expanded = expanded.replace(/:/g, ''); // Remove colons
+		let reversed = expanded.split('').reverse().join(''); // Reverse the string
+		let dotted = reversed.split('').join('.'); // Insert dots
+		return dotted + '.ip6.arpa'; // Append suffix
+	}
+
 	private getRandomInt(min: number, max: number) {
 		return new Promise<number>((resolve, reject) =>
 			// The +1 is added to max in the randomInt call because the upper bound is exclusive

@@ -164,7 +164,7 @@ export class FetchHole {
 		return response;
 	}
 
-	protected getFresh(customRequest: Request, initToSend: RequestInit, config: FetchHoleConfig) {
+	protected getFresh(customRequest: Request, initToSend: RequestInit, redirectCount: number, config: FetchHoleConfig) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
 			if (config.cacheType != CacheType.Default) {
 				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
@@ -251,7 +251,7 @@ export class FetchHole {
 			} else {
 				// No cache found at all
 				try {
-					response = await this.getFresh(customRequest, initToSend, config);
+					response = await this.getFresh(customRequest, initToSend, redirectCount, config);
 				} catch (error) {
 					mainReject(error);
 				}

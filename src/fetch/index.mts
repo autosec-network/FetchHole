@@ -172,6 +172,8 @@ export class FetchHole {
 
 			fetch(customRequest, initToSend)
 				.then(async (response: StreamableResponse) => {
+					await this.responseLogging(config.logLevel, response!, customRequest.url);
+
 					if (response.ok) {
 						response = await this.headerProcessing(response);
 
@@ -181,8 +183,6 @@ export class FetchHole {
 					} else if ([301, 302, 303, 307, 308].includes(response.status)) {
 						this.handleRedirect(customRequest, initToSend, response, redirectCount, config).then(resolve).catch(reject);
 					} else {
-						await this.responseLogging(config.logLevel, response!, customRequest.url);
-
 						if (config.hardFail) {
 							let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
 							if (config.logLevel > LoggingLevel.INFO) {
@@ -250,6 +250,8 @@ export class FetchHole {
 			if (response) {
 				// Good cache
 				this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
+
+				await this.responseLogging(config.logLevel, response!, customRequest.url);
 			} else {
 				// No cache found at all
 				try {
@@ -258,8 +260,6 @@ export class FetchHole {
 					mainReject(error);
 				}
 			}
-
-			await this.responseLogging(config.logLevel, response!, customRequest.url);
 
 			let processTextEventStream = false;
 			if (response?.headers.has('content-type') && response.headers.get('content-type') === 'text/event-stream') {

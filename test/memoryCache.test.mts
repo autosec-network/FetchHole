@@ -70,7 +70,7 @@ class RandomResponseGenerator {
 	 * @param {boolean} [asJson=Boolean(randomBytes(1)[0] % 2)] - Flag to determine if the response should be in JSON format.
 	 * @returns {Response} A Response object containing either a random string or a JSON object.
 	 */
-	public static createResponse(length: number = randomInt(1, 1 * 1000 * 1000), asJson: boolean = Boolean(randomBytes(1)[0] % 2)): Response {
+	public static createResponse(length: number = randomInt(1, 1 * 1000 * 1000), asJson: boolean = Boolean(randomBytes(1)[0]! % 2)): Response {
 		const content = asJson ? JSON.stringify(this.generateRandomJson(length)) : this.generateRandomString(length);
 		// Assuming Response is a class from your web framework
 		return new Response(content);

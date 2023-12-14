@@ -179,8 +179,7 @@ export class FetchHole {
 
 						resolve(response);
 					} else if ([301, 302, 303, 307, 308].includes(response.status)) {
-						// TODO: Redirect
-						// https://fetch.spec.whatwg.org/#http-redirect-fetch
+						this.handleRedirect(customRequest, initToSend, response, redirectCount, config).then(resolve).catch(reject);
 					} else {
 						await this.responseLogging(config.logLevel, response!, customRequest.url);
 
@@ -200,7 +199,10 @@ export class FetchHole {
 		});
 	}
 
-	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, response: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {}
+	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, response: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {
+		// https://fetch.spec.whatwg.org/#http-redirect-fetch
+		return new Promise<StreamableResponse>((resolve, reject) => {});
+	}
 
 	/**
 	 * Fetches a resource at a specified URL, with caching and redirect following features.

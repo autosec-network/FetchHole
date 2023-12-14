@@ -1,7 +1,17 @@
 import { createHash } from 'node:crypto';
+import { defaultConfig } from '../fetch/config.mjs';
 import type { FetchHoleConfig } from '../fetch/types.js';
 
 export abstract class CacheBase {
+	protected config: FetchHoleConfig;
+
+	constructor(config: Partial<FetchHoleConfig> = {}) {
+		this.config = {
+			...defaultConfig,
+			...config,
+		};
+	}
+
 	protected areHeadersEqual(headers1: Headers, headers2: Headers): boolean {
 		const entries1 = headers1.entries();
 
@@ -18,13 +28,13 @@ export abstract class CacheBase {
 		return true;
 	}
 
-	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0]): Promise<string> {
+	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.hashAlgorithm): Promise<string> {
 		const hash = createHash(hashAlgorithm);
 		hash.update(Buffer.from(await request.arrayBuffer()));
 		return hash.digest('hex');
 	}
 
-	protected async areFetchesEqual(cachedFetch: Request | Response, newFetch: Request | Response, ignoreMethod: boolean = false, config: FetchHoleConfig): Promise<boolean> {
+	protected async areFetchesEqual(cachedFetch: Request | Response, newFetch: Request | Response, ignoreMethod: boolean = false, config: FetchHoleConfig = this.config): Promise<boolean> {
 		// Check if the request URL and method are the same
 		// When `ignoreMethod` is `true`, the request is considered to be a `GET` request regardless of its actual value
 		if (cachedFetch.url !== newFetch.url) {

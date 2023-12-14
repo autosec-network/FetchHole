@@ -28,7 +28,7 @@ export abstract class CacheBase {
 		return true;
 	}
 
-	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.hashAlgorithm): Promise<string> {
+	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.hashAlgorithm) {
 		const hash = createHash(hashAlgorithm);
 		hash.update(Buffer.from(await request.arrayBuffer()));
 		return hash.digest('hex');

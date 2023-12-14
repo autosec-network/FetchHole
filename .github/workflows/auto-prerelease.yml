@@ -91,6 +91,7 @@ jobs:
           name: dist
           path: ${{ github.workspace }}/dist
           if-no-files-found: error
+          compression-level: 9
   test:
     needs: build
     runs-on: ${{ matrix.os }}

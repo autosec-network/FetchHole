@@ -2,7 +2,7 @@ import { Chalk } from 'chalk';
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { MemoryCache } from '../cache/memoryCache.mjs';
-import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
+import { CacheType, LoggingLevel, configForCall, defaultConfig } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 import { dropAuthRedirect, modifyRedirectRequest, responseTainted } from './extras.mjs';
 import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from './types.js';
@@ -20,23 +20,6 @@ export class FetchHole {
 		this.config = {
 			...defaultConfig,
 			...config,
-		};
-	}
-
-	protected configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}): FetchHoleConfig {
-		let fetchHoleConfig: Partial<FetchHoleConfig>;
-
-		if ('fetchHole' in overrides) {
-			// Extract fetchHole property if overrides is of type FetchHoleFetchConfig
-			fetchHoleConfig = (overrides as FetchHoleFetchConfig).fetchHole || {};
-		} else {
-			// Use overrides directly if it's of type Partial<FetchHoleConfig>
-			fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
-		}
-
-		return {
-			...this.config,
-			...fetchHoleConfig,
 		};
 	}
 
@@ -60,7 +43,7 @@ export class FetchHole {
 	 * @returns {FetchHoleFetchConfig} The updated RequestInit object without the 'body' property.
 	 */
 	protected initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
-		const config = this.configForCall(init);
+		const config = configForCall(init, this.config);
 
 		if (config.logLevel >= LoggingLevel.DEBUG) {
 			init = {
@@ -352,7 +335,7 @@ export class FetchHole {
 	 */
 	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0) {
 		return new Promise<StreamableResponse>(async (mainResolve, mainReject) => {
-			const config = this.configForCall(init);
+			const config = configForCall(init, this.config);
 
 			const initToSend: RequestInit = {
 				...{

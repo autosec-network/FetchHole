@@ -1,4 +1,4 @@
-import type { FetchHoleConfig } from './types.js';
+import type { FetchHoleConfig, FetchHoleFetchConfig } from './types.js';
 
 /**
  * Enumerates types of caches which can be set up with FetchHole.

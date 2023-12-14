@@ -23,7 +23,7 @@ class RandomResponseGenerator {
 	 * @param {number} length - The length of the key name to generate.
 	 * @returns {string} A random key name.
 	 */
-	private static generateRandomKey(length: number): string {
+	public static generateRandomKey(length: number): string {
 		// Generating a key that is readable and valid for a JSON object
 		return this.generateRandomString(length).substring(0, length);
 	}

@@ -35,7 +35,7 @@ export class MemoryCache extends CacheBase {
 
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest, cachedResponse] of this.cache.get(request.url)!) {
-				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod, config)) {
+				if (await this.areFetchesEqual(request, cachedRequest, options?.ignoreMethod, config)) {
 					return cachedResponse.clone();
 				} else {
 					// Request doesn't match
@@ -56,7 +56,7 @@ export class MemoryCache extends CacheBase {
 
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest] of this.cache.get(request.url)!) {
-				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod, config)) {
+				if (await this.areFetchesEqual(request, cachedRequest, options?.ignoreMethod, config)) {
 					return this.cache.delete(request.url);
 				} else {
 					// Request doesn't match

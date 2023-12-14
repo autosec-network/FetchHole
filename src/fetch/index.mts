@@ -1,4 +1,6 @@
 import { Chalk } from 'chalk';
+import { Buffer } from 'node:buffer';
+import { createHash } from 'node:crypto';
 import { MemoryCache } from '../cache/memoryCache.mjs';
 import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
@@ -104,19 +106,59 @@ export class FetchHole {
 		this.logWriter(level, [response.ok ? chalk.green('Fetch response') : chalk.red('Fetch response'), response.ok], [response.ok ? chalk.green(response.url || url?.toString()) : chalk.red(response.url || url?.toString()), JSON.stringify(responseInfo, null, '\t')]);
 	}
 
-	protected headerProcessing(response: StreamableResponse): StreamableResponse {
+	/**
+	 * Processes the headers of a response.
+	 * This method checks for the presence of 'Content-Length' and 'ETag' headers.
+	 * If these headers are missing, it calculates their values.
+	 * Optimized to work in chunks and not load entire response.
+	 *
+	 * @param {StreamableResponse} response - The response object to process.
+	 * @returns {Promise<StreamableResponse>} - The processed response.
+	 */
+	protected async headerProcessing(response: StreamableResponse) {
+		// Don't do work on streaming content
 		if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
-			// Body related headers here
+			// Define the headers we are interested in checking
+			const headerChecks = ['Content-Length', 'ETag'];
+			// Only run if any of the headers are missing
+			if (headerChecks.every((header) => response.headers.has(header))) {
+				// Split the body stream into two so we can read from one without consuming the other
+				const [body1, body2] = response.body!.tee();
+				const reader = body1.getReader();
 
-			if (!response.headers.has('Content-Length')) {
-				// TODO
-			}
+				// Variable to calculate the content length
+				let length = 0;
+				// Create a hash object for ETag calculation if ETag header is missing
+				const hash = response.headers.has('ETag') ? null : createHash('md5');
 
-			if (!response.headers.has('ETag')) {
-				// TODO
+				while (true) {
+					// Read chunks from the stream
+					const { done, value } = await reader.read();
+					if (done) break; // Exit the loop if no more data
+
+					// Calculate content length if 'Content-Length' header is missing
+					if (!response.headers.has('Content-Length')) {
+						length += value.length;
+					}
+
+					// Update hash with the chunk data if 'ETag' header is missing
+					if (!response.headers.has('ETag')) {
+						hash!.update(Buffer.from(value));
+					}
+				}
+
+				if (!response.headers.has('Content-Length')) {
+					response.headers.set('Content-Length', length.toString());
+				}
+
+				if (!response.headers.has('ETag')) {
+					response.headers.set('ETag', hash!.digest('hex'));
+				}
+
+				response = new Response(body2, response);
 			}
 		} else {
-			// Other headers
+			// Other headers not based on body
 		}
 
 		return response;

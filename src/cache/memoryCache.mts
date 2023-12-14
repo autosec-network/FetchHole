@@ -1,3 +1,4 @@
+import type { FetchHoleConfig } from '../fetch/types.js';
 import { CacheBase } from './base.mjs';
 
 export class MemoryCache extends CacheBase {
@@ -27,14 +28,14 @@ export class MemoryCache extends CacheBase {
 		});
 	}
 
-	public async match(request: RequestInfo, options?: CacheQueryOptions): Promise<Response | undefined> {
+	public async match(request: RequestInfo, config: FetchHoleConfig, options?: CacheQueryOptions): Promise<Response | undefined> {
 		if (!(request instanceof Request)) {
 			request = new Request(request);
 		}
 
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest, cachedResponse] of this.cache.get(request.url)!) {
-				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod)) {
+				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod, config)) {
 					return cachedResponse.clone();
 				} else {
 					// Request doesn't match
@@ -48,14 +49,14 @@ export class MemoryCache extends CacheBase {
 		}
 	}
 
-	public async delete(request: RequestInfo, options?: CacheQueryOptions): Promise<boolean> {
+	public async delete(request: RequestInfo, config: FetchHoleConfig, options?: CacheQueryOptions): Promise<boolean> {
 		if (!(request instanceof Request)) {
 			request = new Request(request);
 		}
 
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest] of this.cache.get(request.url)!) {
-				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod)) {
+				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod, config)) {
 					return this.cache.delete(request.url);
 				} else {
 					// Request doesn't match

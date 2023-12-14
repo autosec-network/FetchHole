@@ -23,6 +23,10 @@ export interface StreamableResponse extends Response {
  */
 export interface FetchHoleConfig {
 	cacheType: CacheType;
+	/**
+	 * @see `openssl list -digest-algorithms`
+	 */
+	hashAlgorithm: Parameters<typeof createHash>[0];
 	hardFail: boolean;
 	logLevel: LoggingLevel;
 	redirectCount: number;

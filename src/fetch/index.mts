@@ -125,7 +125,7 @@ export class FetchHole {
 	 * @param {StreamableResponse} response - The response object to process.
 	 * @returns {Promise<StreamableResponse>} - The processed response.
 	 */
-	protected async headerProcessing(response: StreamableResponse) {
+	protected async headerProcessing(response: StreamableResponse, config: FetchHoleConfig) {
 		// Don't do work on streaming content
 		if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
 			// Define the headers we are interested in checking
@@ -139,7 +139,7 @@ export class FetchHole {
 				// Variable to calculate the content length
 				let length = 0;
 				// Create a hash object for ETag calculation if ETag header is missing
-				const hash = response.headers.has('ETag') ? null : createHash('sha256');
+				const hash = response.headers.has('ETag') ? null : createHash(config.hashAlgorithm);
 
 				while (true) {
 					// Read chunks from the stream
@@ -185,7 +185,7 @@ export class FetchHole {
 					await this.responseLogging(config.logLevel, response!, customRequest.url);
 
 					if (response.ok) {
-						response = await this.headerProcessing(response);
+						response = await this.headerProcessing(response, config);
 
 						// TODO: Save to cache
 
@@ -374,7 +374,7 @@ export class FetchHole {
 			switch (config.cacheType) {
 				case CacheType.Memory:
 					try {
-						response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
+						response = (await this.memCache.match(customRequest, config)) as StreamableResponse | undefined;
 					} catch (error) {
 						this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
 					}

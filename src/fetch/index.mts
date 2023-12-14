@@ -200,7 +200,7 @@ export class FetchHole {
 		});
 	}
 
-	protected handleRedirect(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0) {}
+	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, response: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {}
 
 	/**
 	 * Fetches a resource at a specified URL, with caching and redirect following features.

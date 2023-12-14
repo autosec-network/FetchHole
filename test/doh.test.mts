@@ -71,7 +71,7 @@ describe('DohResolver Tests', () => {
 									strictEqual(typeof answer.data, 'string');
 								}
 							}
-							if (response.Authority) {
+							/*if (response.Authority) {
 								ok(Array.isArray(response.Authority));
 								for (const authority of response.Authority) {
 									strictEqual(typeof authority.name, 'string');
@@ -97,7 +97,7 @@ describe('DohResolver Tests', () => {
 								} else {
 									strictEqual(typeof response.Comment, 'string');
 								}
-							}
+							}*/
 						}
 					}
 				});

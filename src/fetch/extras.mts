@@ -26,6 +26,7 @@ export function modifyRedirectRequest(originalRequest: Request, requestSource: R
 		method: 'GET',
 		body: null,
 		headers: newHeaders,
+		referrer: originalRequest.referrer,
 	});
 }
 
@@ -44,5 +45,6 @@ export function dropAuthRedirect(originalRequest: Request, requestSource: Reques
 		method: originalRequest.method,
 		body: originalRequest.body,
 		headers: newHeaders,
+		referrer: originalRequest.referrer,
 	});
 }

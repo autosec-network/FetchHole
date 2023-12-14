@@ -225,6 +225,7 @@ export class FetchHole {
 			// 2
 			if (originalRequest) {
 				const originalUrl = new URL(originalRequest.url);
+				const internalUrl = new URL(internalResponse.url);
 				// 4
 				if (internalResponse.headers.has('Location')) {
 					try {
@@ -269,6 +270,28 @@ export class FetchHole {
 										// 16 - irrelevant since timing info is not done internally
 										// 17 - irrelevant since timing info is not done internally
 										// 18 - irrelevant since there is no url history
+										// 19
+										let newReferrer = originalRequest.referrer;
+										switch (originalRequest.referrerPolicy) {
+											case 'no-referrer':
+												newReferrer = '';
+												break;
+											case 'no-referrer-when-downgrade':
+											case 'origin':
+											case 'origin-when-cross-origin':
+											case 'strict-origin':
+											case 'strict-origin-when-cross-origin':
+											case 'unsafe-url':
+												newReferrer = internalUrl.toString();
+												break;
+											case 'same-origin':
+												if (originalUrl.origin === internalUrl.origin) {
+													newReferrer = internalUrl.toString();
+												} else {
+													newReferrer = '';
+												}
+												break;
+										}
 										// 20 - irrelevant due to this class taking over
 										// 21 - irrelevant due to this class taking over
 										// 22
@@ -283,8 +306,7 @@ export class FetchHole {
 													body: originalRequest.body,
 													method: originalRequest.method,
 													headers: originalRequest.headers,
-													// 19
-													referrerPolicy: originalRequest.referrerPolicy,
+													referrer: newReferrer,
 												},
 												newRedirectCount,
 											),

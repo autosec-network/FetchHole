@@ -1,4 +1,4 @@
-import { FetchHoleConfig } from './types.js';
+import type { FetchHoleConfig } from './types.js';
 
 /**
  * Enumerates types of caches which can be set up with FetchHole.
@@ -38,3 +38,20 @@ export const defaultConfig = {
 	logLevel: LoggingLevel.INFO,
 	redirectCount: 20,
 } satisfies FetchHoleConfig;
+
+export function configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}, initialConfig: FetchHoleConfig = defaultConfig): FetchHoleConfig {
+	let fetchHoleConfig: Partial<FetchHoleConfig>;
+
+	if ('fetchHole' in overrides) {
+		// Extract fetchHole property if overrides is of type FetchHoleFetchConfig
+		fetchHoleConfig = (overrides as FetchHoleFetchConfig).fetchHole || {};
+	} else {
+		// Use overrides directly if it's of type Partial<FetchHoleConfig>
+		fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
+	}
+
+	return {
+		...initialConfig,
+		...fetchHoleConfig,
+	};
+}

@@ -199,7 +199,7 @@ export class FetchHole {
 		});
 	}
 
-	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, response: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {
+	protected handleRedirect(originalRequest: Request, initToSend: RequestInit, internalResponse: StreamableResponse, redirectCount: number = 0, config: FetchHoleConfig) {
 		// https://fetch.spec.whatwg.org/#http-redirect-fetch
 		/**
 		 * 1. **Start with a web request.** We have a request we're dealing with (let's call it `request`).

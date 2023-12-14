@@ -131,7 +131,7 @@ export class FetchHole {
 			fetch(customRequest, initToSend)
 				.then(async (response: StreamableResponse) => {
 					if (response.ok) {
-						response = this.headerProcessing(response);
+						response = await this.headerProcessing(response);
 
 						// TODO: Save to cache
 

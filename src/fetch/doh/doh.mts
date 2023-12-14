@@ -27,7 +27,7 @@ export class DohResolver {
 		);
 	}
 
-	// public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse> {
+	// @ts-ignore
 	public async query(parameters: DohRequest, timeout: number = 10 * 1000): Promise<DohSuccessfulResponse | DohErrorResponse | undefined> {
 		if (!('ct' in parameters)) {
 			if (this.nameserver_url.pathname === '/dns-query') {

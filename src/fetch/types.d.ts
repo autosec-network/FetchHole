@@ -1,6 +1,8 @@
 import type { CacheType, LoggingLevel } from './config.mjs';
 import type { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 
+export interface PotentialThirdPartyResponse extends Response, Record<string, any> {}
+
 /**
  * An extension of the Response interface that includes event emitters for streaming text and JSON data.
  * @description This interface is intended for use with Server-Sent Events (SSE) responses.

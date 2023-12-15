@@ -1,7 +1,7 @@
 {
 	"name": "@autosec/fetchhole",
 	"version": "0.0.1-nightly.32",
-	"description": "",
+	"description": "Boost your FaaS development with `@autosec/fetchhole`, a secure, drop-in replacement for the native `fetch()` function, designed for security-focused web developers.",
 	"type": "module",
 	"main": "./dist/index.mjs",
 	"types": "./dist/index.d.mts",
@@ -16,8 +16,8 @@
 	},
 	"author": "Autosec",
 	"contributors": [
-		"Sam Gammon <sam@elide.dev>",
-		"DemosJarco <1209494+demosjarco@users.noreply.github.com>"
+		"DemosJarco <1209494+demosjarco@users.noreply.github.com>",
+		"Sam Gammon <sam@elide.dev>"
 	],
 	"license": "MIT",
 	"bugs": {

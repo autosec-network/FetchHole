@@ -81,7 +81,9 @@ describe('Fetch Tests', () => {
 
 		// @ts-ignore
 		strictEqual(...(await Promise.all([response1.text(), response2.text()])), 'Cached response should match the original response');
-		strictEqual(response1.headers.get('X-FetchHole-Cache-Status'), `HIT-${CacheType.Memory}`, 'Cached response should have header showing it was cached and from where');
+
+		strictEqual(response1.headers.has('X-FetchHole-Cache-Status'), false, "First fetch shouldn't have header");
+		strictEqual(response2.headers.get('X-FetchHole-Cache-Status'), `HIT-${CacheType.Memory}`, 'Second fetch should have header showing it was cached and from where');
 	});
 });
 

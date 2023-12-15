@@ -1,5 +1,5 @@
 import { CacheType } from '../fetch/config.mjs';
-import type { FetchHoleConfig } from '../fetch/types.js';
+import type { FetchHoleConfig, PotentialThirdPartyResponse } from '../fetch/types.js';
 import { CacheBase } from './base.mjs';
 
 export class MemoryCache extends CacheBase {
@@ -38,8 +38,19 @@ export class MemoryCache extends CacheBase {
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest, cachedResponse] of this.cache.get(request.url)!) {
 				if (await this.areFetchesEqual(request, cachedRequest, config)) {
-					const clonedCachedResponse = cachedResponse.clone();
-					clonedCachedResponse.headers.set('X-FetchHole-Cache-Status', `HIT-${CacheType.Memory}`);
+					// Clone to leave alone stored copy
+					let clonedCachedResponse = cachedResponse.clone();
+
+					const newResponseInfo: Record<keyof PotentialThirdPartyResponse, any> = {};
+					// Will also copy third party properties like `cf` object
+					Object.keys(clonedCachedResponse).forEach((key) => {
+						newResponseInfo[key] = (clonedCachedResponse as PotentialThirdPartyResponse)[key];
+					});
+
+					const newHeaders = new Headers(clonedCachedResponse.headers);
+					newHeaders.set('X-FetchHole-Cache-Status', `HIT-${CacheType.Memory}`);
+					newResponseInfo['headers'] = newHeaders;
+
 					return clonedCachedResponse;
 				} else {
 					// Request doesn't match

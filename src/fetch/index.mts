@@ -403,13 +403,13 @@ export class FetchHole {
 
 			mainResolve(response!);
 
-			if (processTextEventStream) {
+			if (processTextEventStream && response && response.body) {
 				// TODO: Streaming support
 				new Promise<void>(async (resolve, reject) => {
 					try {
 						let accumulatedData = '';
 						// @ts-ignore
-						for await (const chunk of response!.body!) {
+						for await (const chunk of response.body) {
 							const decodedChunk = new TextDecoder('utf-8').decode(chunk, { stream: true });
 							accumulatedData += decodedChunk;
 

@@ -72,14 +72,14 @@ export class FetchHole {
 	 *
 	 * @returns {Promise<void>} A Promise that resolves when the logging is complete.
 	 */
-	protected async responseLogging(level: LoggingLevel, response: Response, url?: RequestInfo | URL): Promise<void> {
-		const responseInfo: Record<string, any> = {
-			headers: Object.fromEntries(response.headers.entries()),
-			status: response.status,
-			statusText: response.statusText,
-			ok: response.ok,
-			type: response.type,
-		};
+	protected async responseLogging(level: LoggingLevel, response: PotentialThirdPartyResponse, url?: RequestInfo | URL): Promise<void> {
+		const responseInfo: Record<keyof PotentialThirdPartyResponse, any> = {};
+		// Will also copy third party properties like `cf` object
+		Object.keys(response).forEach((key) => {
+			responseInfo[key] = response[key];
+		});
+		responseInfo['headers'] = Object.fromEntries(response.headers.entries());
+
 		if (level == LoggingLevel.DEBUG) {
 			try {
 				responseInfo['body'] = Object.fromEntries((await response.clone().formData()).entries());

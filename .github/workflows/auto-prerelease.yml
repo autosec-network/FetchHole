@@ -105,9 +105,9 @@ jobs:
       - name: Find test files
         id: set-matrix
         run: |
-          $currentPath = Get-Location
-          $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | ForEach-Object { $_.FullName }
-          $relativeFiles = $files | ForEach-Object { $_.Replace($currentPath.Path + '\', '').Replace('\', '/') }
+          $rootPath = Join-Path (Get-Location) 'test'
+          $files = Get-ChildItem $rootPath -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | ForEach-Object { $_.FullName }
+          $relativeFiles = $files | ForEach-Object { $_.Replace($rootPath + '\', '').Replace('\', '/') }
 
           # Convert the file paths to a JSON array
           $jsonArray = $relativeFiles | ConvertTo-Json -Compress

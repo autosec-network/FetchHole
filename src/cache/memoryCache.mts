@@ -1,18 +1,21 @@
+import { CacheType } from '../fetch/config.mjs';
+import type { FetchHoleConfig, PotentialThirdPartyResponse } from '../fetch/types.js';
 import { CacheBase } from './base.mjs';
 
 export class MemoryCache extends CacheBase {
 	protected cache = new Map<Request['url'], Map<Request, Response>>();
 
-	public put(request: RequestInfo, response: Response): Promise<void> {
+	public put(request: RequestInfo, response: Response, config: FetchHoleConfig = this.config): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (!(request instanceof Request)) {
 				request = new Request(request);
 			}
 
 			// Follow cache specs https://developers.cloudflare.com/workers/runtime-apis/cache/#invalid-parameters
-			if (request.method != 'GET') reject();
+			if (!config.cache.ignoreMethod && request.method != 'GET') reject();
 			if (response.status == 206) reject();
-			if (response.headers.get('Vary') == '*') reject();
+			if (!config.cache.ignoreMethod && response.headers.get('Vary') == '*') reject();
+			// TODO: cache.put returns a 413 error if Cache-Control instructs not to cache or if the response is too large.
 
 			if (response.ok) {
 				try {
@@ -27,15 +30,28 @@ export class MemoryCache extends CacheBase {
 		});
 	}
 
-	public async match(request: RequestInfo, options?: CacheQueryOptions): Promise<Response | undefined> {
+	public async match(request: RequestInfo, config: FetchHoleConfig = this.config): Promise<Response | undefined> {
 		if (!(request instanceof Request)) {
 			request = new Request(request);
 		}
 
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest, cachedResponse] of this.cache.get(request.url)!) {
-				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod)) {
-					return cachedResponse.clone();
+				if (await this.areFetchesEqual(request, cachedRequest, config)) {
+					// Clone to leave alone stored copy
+					let clonedCachedResponse = cachedResponse.clone();
+
+					const newResponseInfo: Record<keyof PotentialThirdPartyResponse, any> = {};
+					// Will also copy third party properties like `cf` object
+					Object.keys(clonedCachedResponse).forEach((key) => {
+						newResponseInfo[key] = (clonedCachedResponse as PotentialThirdPartyResponse)[key];
+					});
+
+					const newHeaders = new Headers(clonedCachedResponse.headers);
+					newHeaders.set('X-FetchHole-Cache-Status', `HIT-${CacheType.Memory}`);
+					newResponseInfo['headers'] = newHeaders;
+
+					return clonedCachedResponse;
 				} else {
 					// Request doesn't match
 					return undefined;
@@ -48,14 +64,14 @@ export class MemoryCache extends CacheBase {
 		}
 	}
 
-	public async delete(request: RequestInfo, options?: CacheQueryOptions): Promise<boolean> {
+	public async delete(request: RequestInfo, config: FetchHoleConfig = this.config): Promise<boolean> {
 		if (!(request instanceof Request)) {
 			request = new Request(request);
 		}
 
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest] of this.cache.get(request.url)!) {
-				if (await this.areFetchesEqual(cachedRequest, request, options?.ignoreMethod)) {
+				if (await this.areFetchesEqual(request, cachedRequest, config)) {
 					return this.cache.delete(request.url);
 				} else {
 					// Request doesn't match

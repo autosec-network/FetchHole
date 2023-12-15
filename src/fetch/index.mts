@@ -2,10 +2,10 @@ import { Chalk } from 'chalk';
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { MemoryCache } from '../cache/memoryCache.mjs';
-import { CacheType, LoggingLevel, defaultConfig } from './config.mjs';
+import { CacheType, LoggingLevel, configForCall, defaultConfig } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 import { dropAuthRedirect, modifyRedirectRequest, responseTainted } from './extras.mjs';
-import type { FetchHoleConfig, FetchHoleFetchConfig, StreamableResponse } from './types.js';
+import type { FetchHoleConfig, FetchHoleFetchConfig, PotentialThirdPartyResponse, StreamableResponse } from './types.js';
 
 const chalk = new Chalk({ level: 1 });
 
@@ -20,23 +20,6 @@ export class FetchHole {
 		this.config = {
 			...defaultConfig,
 			...config,
-		};
-	}
-
-	protected configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}): FetchHoleConfig {
-		let fetchHoleConfig: Partial<FetchHoleConfig>;
-
-		if ('fetchHole' in overrides) {
-			// Extract fetchHole property if overrides is of type FetchHoleFetchConfig
-			fetchHoleConfig = (overrides as FetchHoleFetchConfig).fetchHole || {};
-		} else {
-			// Use overrides directly if it's of type Partial<FetchHoleConfig>
-			fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
-		}
-
-		return {
-			...this.config,
-			...fetchHoleConfig,
 		};
 	}
 
@@ -60,7 +43,16 @@ export class FetchHole {
 	 * @returns {FetchHoleFetchConfig} The updated RequestInit object without the 'body' property.
 	 */
 	protected initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
-		const config = this.configForCall(init);
+		const config = configForCall(init, this.config);
+
+		if (config.logLevel >= LoggingLevel.DEBUG) {
+			init = {
+				...init,
+				...{
+					fetchHole: config,
+				},
+			};
+		}
 
 		if (config.logLevel < LoggingLevel.DEBUG) {
 			if ('cf' in init) {
@@ -80,14 +72,14 @@ export class FetchHole {
 	 *
 	 * @returns {Promise<void>} A Promise that resolves when the logging is complete.
 	 */
-	protected async responseLogging(level: LoggingLevel, response: Response, url?: RequestInfo | URL): Promise<void> {
-		const responseInfo: Record<string, any> = {
-			headers: Object.fromEntries(response.headers.entries()),
-			status: response.status,
-			statusText: response.statusText,
-			ok: response.ok,
-			type: response.type,
-		};
+	protected async responseLogging(level: LoggingLevel, response: PotentialThirdPartyResponse, url?: RequestInfo | URL): Promise<void> {
+		const responseInfo: Record<keyof PotentialThirdPartyResponse, any> = {};
+		// Will also copy third party properties like `cf` object
+		Object.keys(response).forEach((key) => {
+			responseInfo[key] = response[key];
+		});
+		responseInfo['headers'] = Object.fromEntries(response.headers.entries());
+
 		if (level == LoggingLevel.DEBUG) {
 			try {
 				responseInfo['body'] = Object.fromEntries((await response.clone().formData()).entries());
@@ -116,7 +108,7 @@ export class FetchHole {
 	 * @param {StreamableResponse} response - The response object to process.
 	 * @returns {Promise<StreamableResponse>} - The processed response.
 	 */
-	protected async headerProcessing(response: StreamableResponse) {
+	protected async headerProcessing(response: StreamableResponse, config: FetchHoleConfig) {
 		// Don't do work on streaming content
 		if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
 			// Define the headers we are interested in checking
@@ -130,7 +122,7 @@ export class FetchHole {
 				// Variable to calculate the content length
 				let length = 0;
 				// Create a hash object for ETag calculation if ETag header is missing
-				const hash = response.headers.has('ETag') ? null : createHash('sha256');
+				const hash = response.headers.has('ETag') ? null : createHash(config.cache.hashAlgorithm);
 
 				while (true) {
 					// Read chunks from the stream
@@ -167,16 +159,16 @@ export class FetchHole {
 
 	protected getFresh(customRequest: Request, initToSend: RequestInit, redirectCount: number, config: FetchHoleConfig) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
-			if (config.cacheType != CacheType.Default) {
-				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
+			if (config.cache.type != CacheType.Default) {
+				this.logWriter(config.logLevel, [chalk.yellow(`${config.cache.type} Cache missed`)], [customRequest.url]);
 			}
 
 			fetch(customRequest, initToSend)
-				.then(async (response: StreamableResponse) => {
+				.then(async (response: PotentialThirdPartyResponse) => {
 					await this.responseLogging(config.logLevel, response!, customRequest.url);
 
 					if (response.ok) {
-						response = await this.headerProcessing(response);
+						response = await this.headerProcessing(response, config);
 
 						// TODO: Save to cache
 
@@ -343,7 +335,7 @@ export class FetchHole {
 	 */
 	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0) {
 		return new Promise<StreamableResponse>(async (mainResolve, mainReject) => {
-			const config = this.configForCall(init);
+			const config = configForCall(init, this.config);
 
 			const initToSend: RequestInit = {
 				...{
@@ -362,12 +354,12 @@ export class FetchHole {
 			this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
 
 			// Attempt cache
-			switch (config.cacheType) {
+			switch (config.cache.type) {
 				case CacheType.Memory:
 					try {
-						response = (await this.memCache.match(customRequest)) as StreamableResponse | undefined;
+						response = (await this.memCache.match(customRequest, config)) as StreamableResponse | undefined;
 					} catch (error) {
-						this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
+						this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error]);
 					}
 
 					break;
@@ -376,7 +368,7 @@ export class FetchHole {
 
 			if (response) {
 				// Good cache
-				this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
+				this.logWriter(config.logLevel, [chalk.green(`${config.cache.type} Cache hit`)], [customRequest.url]);
 
 				await this.responseLogging(config.logLevel, response!, customRequest.url);
 			} else {

@@ -23,7 +23,7 @@ class RandomResponseGenerator {
 	 * @param {number} length - The length of the key name to generate.
 	 * @returns {string} A random key name.
 	 */
-	private static generateRandomKey(length: number): string {
+	public static generateRandomKey(length: number): string {
 		// Generating a key that is readable and valid for a JSON object
 		return this.generateRandomString(length).substring(0, length);
 	}
@@ -70,7 +70,7 @@ class RandomResponseGenerator {
 	 * @param {boolean} [asJson=Boolean(randomBytes(1)[0] % 2)] - Flag to determine if the response should be in JSON format.
 	 * @returns {Response} A Response object containing either a random string or a JSON object.
 	 */
-	public static createResponse(length: number = randomInt(1, 1 * 1000 * 1000), asJson: boolean = Boolean(randomBytes(1)[0] % 2)): Response {
+	public static createResponse(length: number = randomInt(1, 1 * 1000 * 1000), asJson: boolean = Boolean(randomBytes(1)[0]! % 2)): Response {
 		const content = asJson ? JSON.stringify(this.generateRandomJson(length)) : this.generateRandomString(length);
 		// Assuming Response is a class from your web framework
 		return new Response(content);
@@ -92,7 +92,6 @@ describe('MemoryCache Tests', () => {
 		const cachedResponse = await memoryCache.match(request);
 
 		// Check if the response we get back is the same as what we put in.
-		// strictEqual(await cachedResponse?.text(), await response.text(), 'Cached response should match the original response');
 		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');
 	});
 
@@ -104,7 +103,31 @@ describe('MemoryCache Tests', () => {
 		const cachedResponse = await memoryCache.match(request);
 
 		// Check if the response we get back is the same as what we put in.
-		// strictEqual(await cachedResponse?.text(), await response.text(), 'Cached response should match the original response');
+		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');
+	});
+
+	it('should add and retrieve POST items from cache', async () => {
+		// Simulate graphql query
+		const request = new Request('http://example.com/graphql', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				query: `query {
+					${RandomResponseGenerator.generateRandomKey(10)}
+				}`,
+				variables: {
+					key: 'value',
+				},
+			}),
+		});
+		const response = RandomResponseGenerator.createResponse();
+
+		await memoryCache.put(request, response, { cache: { ignoreMethod: true } });
+		const cachedResponse = await memoryCache.match(request, { cache: { ignoreMethod: true } });
+
+		// Check if the response we get back is the same as what we put in.
 		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');
 	});
 

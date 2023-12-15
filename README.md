@@ -23,6 +23,14 @@ Elevate your Function as a Service (FaaS) development with enhanced security at 
         -   Fail if No PTR Record (conducts a PTR record check, followed by a standard DNS check)
         -   Allow
 
+## Supported Environments
+
+-   [x] NodeJS v16.15.0 or later (that's when NodeJS got native `fetch()` support) environments
+-   [ ] Browser support
+-   [x] Cloudflare Workers/Pages with `compatibility_flags = [ "nodejs_compat" ]` (not to be confused with `node_compat = true`)
+    > [!NOTE]
+    > When Browser support lands, it's still recommended to use `nodejs_compat` because those apis run faster and are more robust
+
 ## Installation
 
 ```bash

@@ -167,6 +167,38 @@ export class FetchHole {
 		return response;
 	}
 
+	protected async getFromCache(request: Request, config: FetchHoleConfig) {
+		switch (config.cache.type) {
+			case CacheType.Memory:
+				try {
+					return await this.memCache.match(request, config);
+				} catch (error) {
+					this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error], undefined, undefined, undefined, true);
+					return undefined;
+				}
+			case CacheType.Disk:
+			// TODO
+			default:
+				return undefined;
+		}
+	}
+
+	protected async saveToCache(request: Request, response: Response, config: FetchHoleConfig) {
+		switch (config.cache.type) {
+			case CacheType.Memory:
+				try {
+					return await this.memCache.put(request, response, config);
+				} catch (error) {
+					this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error], undefined, undefined, undefined, true);
+					break;
+				}
+			case CacheType.Disk:
+			// TODO Disk
+			default:
+				break;
+		}
+	}
+
 	protected getFresh(customRequest: Request, initToSend: RequestInit, redirectCount: number, config: FetchHoleConfig) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
 			if (config.cache.type != CacheType.Default) {
@@ -181,6 +213,7 @@ export class FetchHole {
 						await this.responseLogging(config.logLevel, response!, customRequest.url);
 
 						// TODO: Save to cache
+						await this.saveToCache(customRequest, response, config);
 
 						resolve(response);
 					} else if ([301, 302, 303, 307, 308].includes(response.status)) {
@@ -367,17 +400,7 @@ export class FetchHole {
 			this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
 
 			// Attempt cache
-			switch (config.cache.type) {
-				case CacheType.Memory:
-					try {
-						response = (await this.memCache.match(customRequest, config)) as StreamableResponse | undefined;
-					} catch (error) {
-						this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error], undefined, undefined, undefined, true);
-					}
-
-					break;
-				// TODO Disk
-			}
+			response = await this.getFromCache(customRequest, config);
 
 			if (response) {
 				// Good cache

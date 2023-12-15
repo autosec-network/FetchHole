@@ -42,12 +42,7 @@ npm install @autosec/fetchhole
 Simply import fetchhole and use it as a replacement for the native fetch() function.
 
 ```ts
-import fetch from '@autosec/fetchhole';
-
-// Use fetch as you normally would
-fetch('https://example.com').then((response) => {
-	// Your code here
-});
+// TODO
 ```
 
 ## Configuration

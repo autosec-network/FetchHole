@@ -407,10 +407,11 @@ export class FetchHole {
 				// TODO: Streaming support
 				new Promise<void>(async (resolve, reject) => {
 					try {
+						const decoder = new TextDecoder('utf-8');
 						let accumulatedData = '';
 
 						for await (const chunk of response!.body as any as AsyncIterable<Uint8Array>) {
-							const decodedChunk = new TextDecoder('utf-8').decode(chunk, { stream: true });
+							const decodedChunk = decoder.decode(chunk, { stream: true });
 							accumulatedData += decodedChunk;
 
 							let newlineIndex;

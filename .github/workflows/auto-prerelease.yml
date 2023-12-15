@@ -95,7 +95,7 @@ jobs:
   prepare-tests:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      matrix: ${{ steps.set-matrix.outputs.test-files }}
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
         with:
@@ -108,21 +108,15 @@ jobs:
           $currentPath = Get-Location
           $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | ForEach-Object { $_.FullName }
           $relativeFiles = $files | ForEach-Object { $_.Replace($currentPath.Path + '\', '').Replace('\', '/') }
-          $matrix = @()
-          foreach ($version in @('lts/*', 'latest')) {
-            foreach ($os in @('ubuntu-latest', 'windows-latest', 'macos-latest', 'macos-13')) {
-              foreach ($file in $relativeFiles) {
-                $matrix += @{
-                  os = $os
-                  version = $version
-                  file = $file
-                }
-              }
-            }
-          }
-          echo "matrix=$(ConvertTo-Json -InputObject $matrix -Compress)" >> $env:GITHUB_OUTPUT
+
+          # Convert the file paths to a JSON array
+          $jsonArray = $relativeFiles | ConvertTo-Json -Compress
+
+          # Output the JSON array
+          echo "Found files: $jsonArray"
+          echo "test-files=$jsonArray" >> $env:GITHUB_OUTPUT
         shell: pwsh
-      - run: echo "${{ steps.set-matrix.outputs.matrix }}"
+      - run: echo "${{ steps.set-matrix.outputs.test-files }}"
   test:
     needs: [build, prepare-tests]
     runs-on: ${{ matrix.os }}
@@ -133,6 +127,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        test: ${{ fromJson(needs.prepare-tests.outputs.matrix) }}
         os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
         version: [lts/*, latest]
     steps:

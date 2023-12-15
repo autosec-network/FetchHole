@@ -122,6 +122,7 @@ jobs:
           }
           echo "matrix=$(ConvertTo-Json -InputObject $matrix -Compress)" >> $env:GITHUB_OUTPUT
         shell: pwsh
+      - run: echo "${{ steps.set-matrix.outputs.matrix }}"
   test:
     needs: [build, prepare-tests]
     runs-on: ${{ matrix.os }}

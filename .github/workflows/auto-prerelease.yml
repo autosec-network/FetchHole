@@ -95,28 +95,16 @@ jobs:
   prepare-tests:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.test-files }}
+      matrix: ${{ steps.set-matrix.outputs.TEST_FILES }}
     steps:
       - uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
         with:
           disable-sudo: true
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - name: Find test files
+      - run: echo "TEST_FILES=$(find test -type f -iname '*.test.*ts' | jq -R -s -c 'split(\"\n\")[:-1]')" >> $GITHUB_OUTPUT
         id: set-matrix
-        run: |
-          $rootPath = Join-Path (Get-Location) 'test'
-          $files = Get-ChildItem $rootPath -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | ForEach-Object { $_.FullName }
-          $relativeFiles = $files | ForEach-Object { $_.Replace($rootPath + '\', '').Replace('\', '/') }
-
-          # Convert the file paths to a JSON array
-          $jsonArray = $relativeFiles | ConvertTo-Json -Compress
-
-          # Output the JSON array
-          echo "Found files: $jsonArray"
-          echo "test-files=$jsonArray" >> $env:GITHUB_OUTPUT
-        shell: pwsh
-      - run: echo "${{ steps.set-matrix.outputs.test-files }}"
+      - run: echo "${{ steps.set-matrix.outputs.TEST_FILES }}"
   test:
     needs: [build, prepare-tests]
     runs-on: ${{ matrix.os }}

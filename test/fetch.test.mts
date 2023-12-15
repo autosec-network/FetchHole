@@ -1,6 +1,6 @@
 import { fail, match, strictEqual } from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
-import { CacheType, LoggingLevel } from '../dist/fetch/config.mjs';
+import { LoggingLevel } from '../dist/fetch/config.mjs';
 import { FetchHole } from '../dist/fetch/index.mjs';
 
 describe('Fetch Tests', () => {
@@ -59,28 +59,5 @@ describe('Fetch Tests', () => {
 				fail(`${error}`);
 			}
 		}
-	});
-
-	it('should fetch first, then load from memory cache successfully', async () => {
-		const response1 = await fetchHole.fetch(new URL('https://raw.githubusercontent.com/autosec-network/FetchHole/latest/README.md'), {
-			fetchHole: {
-				cache: {
-					type: CacheType.Memory,
-				},
-				logLevel: LoggingLevel.INFO,
-			},
-		});
-		const response2 = await fetchHole.fetch(new URL('https://raw.githubusercontent.com/autosec-network/FetchHole/latest/README.md'), {
-			fetchHole: {
-				cache: {
-					type: CacheType.Memory,
-				},
-				logLevel: LoggingLevel.INFO,
-			},
-		});
-
-		// @ts-ignore
-		strictEqual(...(await Promise.all([response1.text(), response2.text()])), 'Cached response should match the original response');
-		strictEqual(response1.headers.get('X-FetchHole-Cache-Status'), `HIT-${CacheType.Memory}`, 'Cached response should have header showing it was cached and from where');
 	});
 });

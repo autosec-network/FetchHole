@@ -1,3 +1,4 @@
+import { CacheType } from '../fetch/config.mjs';
 import type { FetchHoleConfig } from '../fetch/types.js';
 import { CacheBase } from './base.mjs';
 
@@ -37,7 +38,9 @@ export class MemoryCache extends CacheBase {
 		if (this.cache.has(request.url)) {
 			for (const [cachedRequest, cachedResponse] of this.cache.get(request.url)!) {
 				if (await this.areFetchesEqual(request, cachedRequest, config)) {
-					return cachedResponse.clone();
+					const clonedCachedResponse = cachedResponse.clone();
+					clonedCachedResponse.headers.set('X-FetchHole-Cache-Status', `HIT-${CacheType.Memory}`);
+					return clonedCachedResponse;
 				} else {
 					// Request doesn't match
 					return undefined;

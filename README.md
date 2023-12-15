@@ -7,7 +7,7 @@
 
 # FetchHole
 
-Elevate your Function as a Service (FaaS) development with enhanced security at the edge using `@autosec/fetchhole`. This package acts as a sophisticated drop-in replacement for the native fetch() function, tailored for developers who emphasize security in their web applications.
+Elevate your Function as a Service (FaaS) development with enhanced security at the edge using `@autosec/fetchhole`. This package acts as a sophisticated drop-in replacement for the native `fetch()` function, tailored for developers who emphasize security in their web applications.
 
 ## Features
 

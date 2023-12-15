@@ -131,7 +131,6 @@ export class FetchHole {
 			// Only run if any of the headers are missing
 			if (headerChecks.every((header) => response.headers.has(header))) {
 				// Split the body stream into two so we can read from one without consuming the other
-				const reader = body1.getReader();
 				const [body1, body2] = response.body.tee();
 
 				// Variable to calculate the content length
@@ -139,19 +138,15 @@ export class FetchHole {
 				// Create a hash object for ETag calculation if ETag header is missing
 				const hash = response.headers.has('ETag') ? null : createHash(config.cache.hashAlgorithm);
 
-				while (true) {
-					// Read chunks from the stream
-					const { done, value } = await reader.read();
-					if (done) break; // Exit the loop if no more data
-
+				for await (const chunk of body1 as any as AsyncIterable<Uint8Array>) {
 					// Calculate content length if 'Content-Length' header is missing
 					if (!response.headers.has('Content-Length')) {
-						length += value.length;
+						length += chunk.length;
 					}
 
 					// Update hash with the chunk data if 'ETag' header is missing
 					if (!response.headers.has('ETag')) {
-						hash!.update(Buffer.from(value));
+						hash!.update(Buffer.from(chunk));
 					}
 				}
 

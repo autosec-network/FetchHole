@@ -1,4 +1,6 @@
+.devcontainer
 .github
 .vscode
 src/**
+test/**
 tsconfig.json

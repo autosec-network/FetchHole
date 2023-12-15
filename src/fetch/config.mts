@@ -32,8 +32,13 @@ export enum LoggingLevel {
  * Default configuration.
  */
 export const defaultConfig = {
-	cacheType: CacheType.Default,
-	hashAlgorithm: 'sha256',
+	cache: {
+		type: CacheType.Default,
+		hashAlgorithm: 'sha256',
+		ignoreMethod: false,
+		ignoreSearch: false,
+		ignoreVary: false,
+	},
 	hardFail: true,
 	logLevel: LoggingLevel.INFO,
 	redirectCount: 20,

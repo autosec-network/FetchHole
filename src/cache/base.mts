@@ -28,7 +28,7 @@ export abstract class CacheBase {
 		return true;
 	}
 
-	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.hashAlgorithm) {
+	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.cache.hashAlgorithm) {
 		const hash = createHash(hashAlgorithm);
 
 		if (request.body) {
@@ -40,14 +40,14 @@ export abstract class CacheBase {
 		return hash.digest('hex');
 	}
 
-	protected async areFetchesEqual(cachedFetch: Request | Response, newFetch: Request | Response, ignoreMethod: boolean = false, config: FetchHoleConfig = this.config): Promise<boolean> {
+	protected async areFetchesEqual(cachedFetch: Request | Response, newFetch: Request | Response, config: FetchHoleConfig = this.config): Promise<boolean> {
 		// Check if the request URL and method are the same
 		// When `ignoreMethod` is `true`, the request is considered to be a `GET` request regardless of its actual value
 		if (cachedFetch.url !== newFetch.url) {
 			return false;
 		}
 		if ('method' in cachedFetch && 'method' in newFetch) {
-			if (cachedFetch.url !== newFetch.url || (ignoreMethod ? 'GET' : cachedFetch.method) !== (ignoreMethod ? 'GET' : newFetch.method)) {
+			if (cachedFetch.url !== newFetch.url || (config.cache.ignoreMethod ? 'GET' : cachedFetch.method) !== (config.cache.ignoreMethod ? 'GET' : newFetch.method)) {
 				return false;
 			}
 		}
@@ -58,7 +58,7 @@ export abstract class CacheBase {
 		}
 
 		// Check if the request body is the same
-		const [body1hash, body2hash] = await Promise.all([this.hashBody(cachedFetch, config.hashAlgorithm), this.hashBody(newFetch, config.hashAlgorithm)]);
+		const [body1hash, body2hash] = await Promise.all([this.hashBody(cachedFetch, config.cache.hashAlgorithm), this.hashBody(newFetch, config.cache.hashAlgorithm)]);
 		if (body1hash !== body2hash) {
 			return false;
 		}

@@ -124,8 +124,8 @@ describe('MemoryCache Tests', () => {
 		});
 		const response = RandomResponseGenerator.createResponse();
 
-		await memoryCache.put(request, response, { ignoreMethod: true });
-		const cachedResponse = await memoryCache.match(request, undefined, { ignoreMethod: true });
+		await memoryCache.put(request, response, { cache: { ignoreMethod: true } });
+		const cachedResponse = await memoryCache.match(request, { cache: { ignoreMethod: true } });
 
 		// Check if the response we get back is the same as what we put in.
 		strictEqual(...(await Promise.all([cachedResponse?.text(), response.text()])), 'Cached response should match the original response');

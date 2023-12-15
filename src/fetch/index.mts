@@ -122,7 +122,7 @@ export class FetchHole {
 				// Variable to calculate the content length
 				let length = 0;
 				// Create a hash object for ETag calculation if ETag header is missing
-				const hash = response.headers.has('ETag') ? null : createHash(config.hashAlgorithm);
+				const hash = response.headers.has('ETag') ? null : createHash(config.cache.hashAlgorithm);
 
 				while (true) {
 					// Read chunks from the stream
@@ -159,8 +159,8 @@ export class FetchHole {
 
 	protected getFresh(customRequest: Request, initToSend: RequestInit, redirectCount: number, config: FetchHoleConfig) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
-			if (config.cacheType != CacheType.Default) {
-				this.logWriter(config.logLevel, [chalk.yellow(`${config.cacheType} Cache missed`)], [customRequest.url]);
+			if (config.cache.type != CacheType.Default) {
+				this.logWriter(config.logLevel, [chalk.yellow(`${config.cache.type} Cache missed`)], [customRequest.url]);
 			}
 
 			fetch(customRequest, initToSend)
@@ -354,12 +354,12 @@ export class FetchHole {
 			this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
 
 			// Attempt cache
-			switch (config.cacheType) {
+			switch (config.cache.type) {
 				case CacheType.Memory:
 					try {
 						response = (await this.memCache.match(customRequest, config)) as StreamableResponse | undefined;
 					} catch (error) {
-						this.logWriter(config.logLevel, [chalk.red(`${config.cacheType} Cache error`)], [error]);
+						this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error]);
 					}
 
 					break;
@@ -368,7 +368,7 @@ export class FetchHole {
 
 			if (response) {
 				// Good cache
-				this.logWriter(config.logLevel, [chalk.green(`${config.cacheType} Cache hit`)], [customRequest.url]);
+				this.logWriter(config.logLevel, [chalk.green(`${config.cache.type} Cache hit`)], [customRequest.url]);
 
 				await this.responseLogging(config.logLevel, response!, customRequest.url);
 			} else {

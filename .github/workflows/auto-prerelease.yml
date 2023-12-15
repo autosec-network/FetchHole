@@ -104,7 +104,6 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - run: echo "TEST_FILES=$(find test -type f -iname "*.test.*ts" -exec realpath --relative-to=test '{}' \; | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
         id: set-matrix
-      - run: echo "${{ steps.set-matrix.outputs.TEST_FILES }}"
   test:
     needs: [build, prepare-tests]
     runs-on: ${{ matrix.os }}

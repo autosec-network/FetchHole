@@ -408,8 +408,8 @@ export class FetchHole {
 				new Promise<void>(async (resolve, reject) => {
 					try {
 						let accumulatedData = '';
-						// @ts-ignore
-						for await (const chunk of response.body) {
+
+						for await (const chunk of response!.body) {
 							const decodedChunk = new TextDecoder('utf-8').decode(chunk, { stream: true });
 							accumulatedData += decodedChunk;
 

@@ -125,14 +125,14 @@ export class FetchHole {
 	 */
 	protected async headerProcessing(response: StreamableResponse, config: FetchHoleConfig) {
 		// Don't do work on streaming content
-		if (response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
+		if (response.body && response?.headers.has('content-type') && !(response.headers.get('content-type')?.includes('stream') || response.headers.get('content-type')?.includes('multipart'))) {
 			// Define the headers we are interested in checking
 			const headerChecks = ['Content-Length', 'ETag'];
 			// Only run if any of the headers are missing
 			if (headerChecks.every((header) => response.headers.has(header))) {
 				// Split the body stream into two so we can read from one without consuming the other
-				const [body1, body2] = response.body!.tee();
 				const reader = body1.getReader();
+				const [body1, body2] = response.body.tee();
 
 				// Variable to calculate the content length
 				let length = 0;

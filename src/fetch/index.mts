@@ -409,7 +409,7 @@ export class FetchHole {
 					try {
 						let accumulatedData = '';
 
-						for await (const chunk of response!.body) {
+						for await (const chunk of response!.body as any as AsyncIterable<Uint8Array>) {
 							const decodedChunk = new TextDecoder('utf-8').decode(chunk, { stream: true });
 							accumulatedData += decodedChunk;
 

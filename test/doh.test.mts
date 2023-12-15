@@ -4,7 +4,7 @@ import { DohResolver } from '../dist/fetch/doh/doh.mjs';
 import type { DohRequest } from '../src/fetch/doh/types.d.ts';
 
 describe('DohResolver Tests', () => {
-	const resolversToCheck: Record<string, NonNullable<DohRequest['ct']>>[] = [
+	const resolversToCheck: Record<string, Required<DohRequest['ct']>>[] = [
 		{
 			'https://dns.google/resolve': 'application/dns-json',
 		},
@@ -31,7 +31,7 @@ describe('DohResolver Tests', () => {
 					dohResolver = new DohResolver(resolverURL);
 				});
 
-				const queriesToCheck: Map<string, NonNullable<DohRequest['type']>> = new Map([
+				const queriesToCheck: Map<string, Required<DohRequest['type']>> = new Map([
 					['github.com', 'A'],
 					['microsoft.com', 'AAAA'],
 					[DohResolver.getReverseIpv4('8.8.8.8'), 'PTR'],

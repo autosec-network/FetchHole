@@ -17,8 +17,11 @@ updates:
     groups:
       artifacts:
         patterns:
-          - 'actions/upload-artifact'
-          - 'actions/download-artifact'
+          - 'actions/*-artifact'
+      caches:
+        patterns:
+          - 'actions/cache'
+          - 'actions/cache/*'
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
@@ -31,8 +34,11 @@ updates:
     groups:
       artifacts:
         patterns:
-          - 'actions/upload-artifact'
-          - 'actions/download-artifact'
+          - 'actions/*-artifact'
+      caches:
+        patterns:
+          - 'actions/cache'
+          - 'actions/cache/*'
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

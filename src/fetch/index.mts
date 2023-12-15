@@ -23,13 +23,28 @@ export class FetchHole {
 		};
 	}
 
-	protected logWriter(level: LoggingLevel, info: any[], verbose?: any[], debug?: any[]) {
+	protected logWriter(level: LoggingLevel, minimum: any[], info: any[] = [], verbose: any[] = [], debug: any[] = [], warn: boolean = false, error: boolean = false) {
 		if (level > LoggingLevel.OFF) {
-			let callable = console.info;
-			if (level > LoggingLevel.INFO) {
+			const args = [...minimum];
+
+			let callable = console.log;
+			if (level >= LoggingLevel.INFO) {
+				args.push(...info);
+
+				callable = console.info;
+			}
+			if (level >= LoggingLevel.VERBOSE) {
+				args.push(...verbose);
+
 				callable = console.debug;
 			}
-			const args = [...info, ...(verbose || []), ...(debug || [])];
+			if (level >= LoggingLevel.DEBUG) {
+				args.push(...debug);
+			}
+
+			if (warn) callable = console.warn;
+			if (error) callable = console.error;
+
 			callable.apply(console, args);
 		}
 	}
@@ -45,7 +60,7 @@ export class FetchHole {
 	protected initBodyTrimmer(init: FetchHoleFetchConfig): FetchHoleFetchConfig {
 		const config = configForCall(init, this.config);
 
-		if (config.logLevel >= LoggingLevel.DEBUG) {
+		if (config.logLevel > LoggingLevel.DEBUG) {
 			init = {
 				...init,
 				...{
@@ -54,7 +69,7 @@ export class FetchHole {
 			};
 		}
 
-		if (config.logLevel < LoggingLevel.DEBUG) {
+		if (config.logLevel < LoggingLevel.VERBOSE) {
 			if ('cf' in init) {
 				delete init['cf'];
 			}
@@ -96,7 +111,7 @@ export class FetchHole {
 			}
 		}
 
-		this.logWriter(level, [response.ok ? chalk.green('Fetch response') : chalk.red('Fetch response'), response.ok], [response.ok ? chalk.green(response.url || url?.toString()) : chalk.red(response.url || url?.toString()), JSON.stringify(responseInfo, null, '\t')]);
+		this.logWriter(level, [response.ok ? chalk.green('Fetch response') : chalk.red('Fetch response'), response.ok], [response.ok ? chalk.green(response.url || url?.toString()) : chalk.red(response.url || url?.toString())], [JSON.stringify(responseInfo, null, '\t')], undefined, undefined, !response.ok);
 	}
 
 	/**
@@ -160,22 +175,26 @@ export class FetchHole {
 	protected getFresh(customRequest: Request, initToSend: RequestInit, redirectCount: number, config: FetchHoleConfig) {
 		return new Promise<StreamableResponse>((resolve, reject) => {
 			if (config.cache.type != CacheType.Default) {
-				this.logWriter(config.logLevel, [chalk.yellow(`${config.cache.type} Cache missed`)], [customRequest.url]);
+				this.logWriter(config.logLevel, [chalk.yellow(`${config.cache.type} Cache missed`)], [customRequest.url], undefined, undefined, true);
 			}
 
 			fetch(customRequest, initToSend)
 				.then(async (response: PotentialThirdPartyResponse) => {
-					await this.responseLogging(config.logLevel, response!, customRequest.url);
-
 					if (response.ok) {
 						response = await this.headerProcessing(response, config);
+
+						await this.responseLogging(config.logLevel, response!, customRequest.url);
 
 						// TODO: Save to cache
 
 						resolve(response);
 					} else if ([301, 302, 303, 307, 308].includes(response.status)) {
+						await this.responseLogging(config.logLevel, response!, customRequest.url);
+
 						this.handleRedirect(customRequest, initToSend, response, redirectCount, config).then(resolve).catch(reject);
 					} else {
+						await this.responseLogging(config.logLevel, response!, customRequest.url);
+
 						if (config.hardFail) {
 							let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
 							if (config.logLevel > LoggingLevel.INFO) {
@@ -183,7 +202,6 @@ export class FetchHole {
 							}
 							reject(new Error(errorMsg));
 						} else {
-							this.logWriter(config.logLevel, [chalk.red(`HTTP ${response.status}: ${response.statusText}`)], [customRequest.url]);
 							resolve(response);
 						}
 					}
@@ -359,7 +377,7 @@ export class FetchHole {
 					try {
 						response = (await this.memCache.match(customRequest, config)) as StreamableResponse | undefined;
 					} catch (error) {
-						this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error]);
+						this.logWriter(config.logLevel, [chalk.red(`${config.cache.type} Cache error`)], [error], undefined, undefined, undefined, true);
 					}
 
 					break;

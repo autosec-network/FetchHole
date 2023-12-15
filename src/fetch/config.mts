@@ -22,9 +22,10 @@ export enum CacheType {
  * Supported logging levels.
  */
 export enum LoggingLevel {
-	DEBUG = 3,
-	VERBOSE = 2,
-	INFO = 1,
+	DEBUG = 4,
+	VERBOSE = 3,
+	INFO = 2,
+	MINIMUM = 1,
 	OFF = 0,
 }
 
@@ -40,7 +41,7 @@ export const defaultConfig = {
 		ignoreVary: false,
 	},
 	hardFail: true,
-	logLevel: LoggingLevel.INFO,
+	logLevel: LoggingLevel.MINIMUM,
 	redirectCount: 20,
 } satisfies FetchHoleConfig;
 

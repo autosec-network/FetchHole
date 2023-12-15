@@ -13,7 +13,7 @@ describe('Fetch Tests', () => {
 	it('should fetch data successfully', async () => {
 		const response = await fetchHole.fetch('https://debug.demosjarco.workers.dev', {
 			fetchHole: {
-				logLevel: LoggingLevel.OFF,
+				logLevel: LoggingLevel.INFO,
 			},
 		});
 		const json = await response.json();
@@ -23,7 +23,7 @@ describe('Fetch Tests', () => {
 	it('should fetch data successfully', async () => {
 		const response = await fetchHole.fetch('https://debug.demosjarco.workers.dev', {
 			fetchHole: {
-				logLevel: LoggingLevel.OFF,
+				logLevel: LoggingLevel.INFO,
 				redirectCount: 0,
 			},
 		});
@@ -36,7 +36,7 @@ describe('Fetch Tests', () => {
 	it('should fetch data successfully', async () => {
 		const response = await fetchHole.fetch('https://tinyurl.com/mtyrsvr', {
 			fetchHole: {
-				logLevel: LoggingLevel.OFF,
+				logLevel: LoggingLevel.INFO,
 			},
 		});
 		const json = await response.json();
@@ -47,7 +47,7 @@ describe('Fetch Tests', () => {
 		try {
 			await fetchHole.fetch('https://tinyurl.com/mtyrsvr', {
 				fetchHole: {
-					logLevel: LoggingLevel.OFF,
+					logLevel: LoggingLevel.INFO,
 					redirectCount: 0,
 				},
 			});

@@ -125,16 +125,6 @@ jobs:
           disable-sudo: true
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - name: Find test files
-        id: find-tests
-        run: |
-          $currentPath = Get-Location
-          $files = Get-ChildItem ./test -Recurse | Where-Object { $_.Name -match '\.test\..*ts$' } | ForEach-Object { $_.FullName }
-          $relativeFiles = $files | ForEach-Object { $_.Replace($currentPath.Path + '\', '').Replace('\', '/') }
-          $fileString = $relativeFiles -join ' '
-          echo "Found files: $fileString"
-          echo "test-files=$fileString" >> $env:GITHUB_OUTPUT
-        shell: pwsh
       - uses: actions/download-artifact@7a1cd3216ca9260cd8022db641d960b1db4d1be4 # v4.0.0
       - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4.0.0
         with:
@@ -142,7 +132,7 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - run: npm test -- --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-output.xml ${{ steps.find-tests.outputs.test-files }}
+      - run: npm test -- --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-output.xml test/${{ matrix.test }}
       # - uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4 # v1.7.0
       #   if: always()
       #   with:

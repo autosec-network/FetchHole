@@ -50,8 +50,23 @@ export function configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFet
 		fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
 	}
 
-	return {
-		...initialConfig,
-		...fetchHoleConfig,
-	};
+	return deepMerge(initialConfig, fetchHoleConfig);
+}
+function deepMerge(target: any, source: any): any {
+	if (!source) {
+		return target;
+	}
+
+	for (const key in source) {
+		if (source[key] && typeof source[key] === 'object') {
+			if (!target[key]) {
+				Object.assign(target, { [key]: {} });
+			}
+			deepMerge(target[key], source[key]);
+		} else {
+			Object.assign(target, { [key]: source[key] });
+		}
+	}
+
+	return target;
 }

@@ -404,7 +404,6 @@ export class FetchHole {
 			mainResolve(response!);
 
 			if (processTextEventStream && response && response.body) {
-				// TODO: Streaming support
 				new Promise<void>(async (resolve, reject) => {
 					try {
 						const decoder = new TextDecoder('utf-8');

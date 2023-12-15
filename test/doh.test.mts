@@ -1,5 +1,5 @@
 import { ok, strictEqual } from 'node:assert/strict';
-import { beforeEach, describe, it } from 'node:test';
+import { after, beforeEach, describe, it } from 'node:test';
 import { DohResolver } from '../dist/fetch/doh/doh.mjs';
 import type { DohRequest } from '../src/fetch/doh/types.d.ts';
 
@@ -96,3 +96,10 @@ describe('DohResolver Tests', () => {
 		}
 	}
 });
+
+after(
+	() => {
+		process.exit();
+	},
+	{ timeout: 1 * 60 * 1000 },
+);

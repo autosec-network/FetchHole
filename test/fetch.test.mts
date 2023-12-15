@@ -1,5 +1,5 @@
 import { fail, match, strictEqual } from 'node:assert/strict';
-import { beforeEach, describe, it } from 'node:test';
+import { after, beforeEach, describe, it } from 'node:test';
 import { LoggingLevel } from '../dist/fetch/config.mjs';
 import { FetchHole } from '../dist/fetch/index.mjs';
 
@@ -61,3 +61,10 @@ describe('Fetch Tests', () => {
 		}
 	});
 });
+
+after(
+	() => {
+		process.exit();
+	},
+	{ timeout: 1 * 60 * 1000 },
+);

@@ -67,7 +67,7 @@ describe('Fetch Tests', () => {
 				cache: {
 					type: CacheType.Memory,
 				},
-				logLevel: LoggingLevel.VERBOSE,
+				logLevel: LoggingLevel.INFO,
 			},
 		});
 		const response2 = await fetchHole.fetch(new URL('https://raw.githubusercontent.com/autosec-network/FetchHole/latest/README.md'), {
@@ -75,7 +75,7 @@ describe('Fetch Tests', () => {
 				cache: {
 					type: CacheType.Memory,
 				},
-				logLevel: LoggingLevel.VERBOSE,
+				logLevel: LoggingLevel.INFO,
 			},
 		});
 

@@ -58,7 +58,20 @@ You can customize fetchhole with various options to suit your needs. Settings ca
 		ignoreSearch: false,
 		ignoreVary: false,
 	},
+	dohServer: {
+		provider: 'https://dns.quad9.net/dns-query', // The server used to run security check
+		extraHeaders: new Headers(), // Other headers needed by DoH server other than required by RFC 8484
+		timeout: 2 * 1000, // Timeout in milliseconds to wait for a DNS query to resolve
+	},
 	hardFail: true, // Determines failure handling
+	ip: {
+		policy: IPBlockMode.BlockIfNxPTR,
+		ptrDohServer: {
+			provider: 'https://dns.google/dns-query', // The server used to perform PTR lookups, not security checks
+			extraHeaders: new Headers(), // Other headers needed by DoH server other than required by RFC 8484
+			timeout: 2 * 1000, // Timeout in milliseconds to wait for a DNS query to resolve
+		},
+	},
 	logLevel: LoggingLevel.INFO, // Sets the level of logging
 	redirectCount: 20, // Set custom redirect limit
 }

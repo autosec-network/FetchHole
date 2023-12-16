@@ -397,7 +397,7 @@ export class FetchHole {
 			const customRequest = new Request(destination, initToSend);
 			let response: StreamableResponse | undefined;
 
-			this.logWriter(config.logLevel, [chalk.magenta('Fetch Request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
+			this.logWriter(config.logLevel, [chalk.magenta('Fetch request')], [chalk.magenta(customRequest.url)], [JSON.stringify(this.initBodyTrimmer(init || {}), null, '\t')]);
 
 			// Attempt cache
 			response = await this.getFromCache(customRequest, config);

@@ -34,13 +34,7 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [8787],
-	"portsAttributes": {
-		"8787": {
-			"label": "Wrangler",
-			"onAutoForward": "notify"
-		}
-	},
+	// "forwardPorts": [],
 
 	// https://containers.dev/implementors/spec/#parallel-exec
 	// "onCreateCommand": {},
@@ -57,7 +51,7 @@
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
-			"extensions": ["esbenp.prettier-vscode", "github.vscode-github-actions", "ms-vscode-remote.remote-containers", "github.codespaces", "redhat.vscode-yaml"]
+			"extensions": ["esbenp.prettier-vscode", "github.vscode-github-actions", "github.codespaces", "redhat.vscode-yaml"]
 		}
 	},
 

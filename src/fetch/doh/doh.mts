@@ -125,6 +125,7 @@ export class DohResolver {
 			Answer: packet.answers?.map((answer) => this.mapResponseValues(answer)) ?? [],
 			Authority: packet.authorities?.map((authority) => this.mapResponseValues(authority)) ?? [],
 			Additional: packet.additionals?.map((additional) => this.mapResponseValues(additional)) ?? [],
+			rcode: packet.rcode,
 		};
 	}
 

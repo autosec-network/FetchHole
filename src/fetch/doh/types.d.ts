@@ -62,7 +62,7 @@ interface ResponseValues {
 	data: string;
 }
 
-export interface DohSuccessfulResponse {
+export interface DohSuccessfulResponse extends Record<string, any> {
 	/**
 	 * The Response Code of the DNS Query. Defined here: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
 	 */

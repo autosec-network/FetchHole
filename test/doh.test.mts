@@ -20,6 +20,9 @@ describe('DohResolver Tests', () => {
 		{
 			'https://dns.quad9.net/dns-query': 'application/dns-message',
 		},
+		{
+			'https://security.cloudflare-dns.com/dns-query': 'application/dns-message',
+		},
 	];
 
 	for (const resolverRecord of resolversToCheck) {
@@ -36,11 +39,15 @@ describe('DohResolver Tests', () => {
 					['microsoft.com', 'AAAA'],
 					[DohResolver.getReverseIpv4('8.8.8.8'), 'PTR'],
 					[DohResolver.getReverseIpv6('2001:4860:4860::8888'), 'PTR'],
+					['malware.testcategory.com', 'A'],
 				]);
 
 				for (const [name, type] of queriesToCheck.entries()) {
 					it(`Getting ${type} for ${name}`, async () => {
 						const response = await dohResolver.query({ name, type, ct });
+						if (name == 'malware.testcategory.com') {
+							console.debug(response);
+						}
 
 						// Assert that the response contains the required properties of DohSuccessfulResponse
 						strictEqual(typeof response.Status, 'number');

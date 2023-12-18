@@ -40,7 +40,7 @@
 	// "onCreateCommand": {},
 	// "updateContentCommand": {},
 	"postCreateCommand": {
-		"fixMountPermissions": ["sudo", "chown", "node", "node_modules"],
+		"fixMountPermissions": "sudo chown node:node -R .",
 		"setupPackages": ["npm", "ci"]
 	},
 	"postStartCommand": {

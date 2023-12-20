@@ -1,6 +1,6 @@
 {
 	"name": "@autosec/fetchhole",
-	"version": "0.1.1-beta.1",
+	"version": "0.1.1-beta.2",
 	"description": "Boost your FaaS development with fetchhole, a secure, drop-in replacement for the native `fetch()` function, designed for security-focused web developers.",
 	"type": "module",
 	"main": "./dist/index.mjs",

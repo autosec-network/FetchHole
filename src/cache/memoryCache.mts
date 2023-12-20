@@ -51,7 +51,7 @@ export class MemoryCache extends CacheBase {
 					newHeaders.set('X-FetchHole-Cache-Status', `HIT-${CacheType.Memory}`);
 					newResponseInfo['headers'] = newHeaders;
 
-					return clonedCachedResponse;
+					return new Response(clonedCachedResponse.body, newResponseInfo);
 				} else {
 					// Request doesn't match
 					return undefined;

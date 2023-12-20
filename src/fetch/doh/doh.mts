@@ -6,6 +6,25 @@ import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefi
 // @ts-ignore
 import { DNSSEC_OK } from 'dns-packet';
 // https://github.com/mafintosh/dns-packet/blob/master/index.js#L1655 It is exported, but the type doesn't show it. Tracked: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/67884
+// @ts-ignore
+import { toRcode } from 'dns-packet/rcodes.js';
+// import { toRcode } from 'dns-packet/rcodes.js'; It is exported, but the type doesn't show it.
+
+// https://iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
+export enum RCODE {
+	NoError = 0,
+	FormErr = 1,
+	ServFail = 2,
+	NXDomain = 3,
+	NotImp = 4,
+	Refused = 5,
+	YXDomain = 6,
+	YXRRSet = 7,
+	NXRRSet = 8,
+	NotAuth = 9,
+	NotZone = 10,
+	DSOTYPENI = 11,
+}
 
 export class DohResolver {
 	private nameserver_url: URL;
@@ -111,7 +130,8 @@ export class DohResolver {
 
 	private parseDnsMessage(packet: DecodedPacket): DohSuccessfulResponse {
 		return {
-			Status: packet.flags ?? 0, // Assuming flags field contains the response code
+			// @ts-ignore
+			Status: typeof packet.rcode === 'string' ? toRcode(packet.rcode) : packet.rcode,
 			TC: packet.flag_tc,
 			RD: packet.flag_rd,
 			RA: packet.flag_ra,

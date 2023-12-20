@@ -1,5 +1,5 @@
 {
-	"extends": "../tsconfig.json",
+	"extends": "../tsconfig.esm.json",
 	"compilerOptions": {
 		"declaration": false,
 		"noEmit": true /* Disable emitting files from a compilation. */

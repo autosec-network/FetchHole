@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"label": "TS Build",
-			"dependsOn": ["build"],
+			"dependsOn": ["build:esm"],
 			"isBackground": true,
 			"group": {
 				"kind": "build",
@@ -14,10 +14,10 @@
 			}
 		},
 		{
-			"label": "build",
-			"detail": "tsc --watch",
+			"label": "build:esm",
+			"detail": "tsc --watch -p tsconfig.esm.json",
 			"type": "npm",
-			"script": "build:watch",
+			"script": "build:esm:watch",
 			"presentation": {
 				"group": "build"
 			},

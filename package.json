@@ -6,8 +6,10 @@
 	"main": "./dist/index.mjs",
 	"types": "./dist/index.d.mts",
 	"scripts": {
-		"build": "tsc",
-		"build:watch": "npm run build -- --watch",
+		"build": "npm run build:cjs && npm run build:esm",
+		"build:cjs": "tsc -p tsconfig.cjs.json",
+		"build:esm": "tsc -p tsconfig.esm.json",
+		"build:esm:watch": "tsc --watch -p tsconfig.esm.json",
 		"test": "node --loader ts-node/esm --test --test-reporter=spec"
 	},
 	"repository": {

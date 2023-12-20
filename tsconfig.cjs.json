@@ -1,0 +1,8 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "CommonJS" /* Specify what module code is generated. */,
+		"moduleResolution": "Node" /* Specify how TypeScript looks up a file from a given module specifier. */,
+		"declaration": false /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
+	}
+}

@@ -67,25 +67,10 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
-        with:
-          path: |
-            .tsbuildinfo
-            dist
-          # npm packages + tsconfig + value of `include` in tsconfig
-          key: typescript-cache-tsc-${{ hashFiles('**/*.tsbuildinfo') }}
-          restore-keys: |
-            typescript-cache-tsc-
-          enableCrossOsArchive: true
-      - run: npm run build
-      - uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
-        with:
-          path: |
-            .tsbuildinfo
-            dist
-          # npm packages + tsconfig + value of `include` in tsconfig
-          key: typescript-cache-tsc-${{ hashFiles('**/*.tsbuildinfo') }}
-          enableCrossOsArchive: true
+      - run: find ./src -name '*.mts' -exec sh -c 'mv \"$1\" \"${1%.mts}.cts\"' -- {} \\;
+      - run: npm run build:cjs
+      - run: find ./src -name '*.cts' -exec sh -c 'mv \"$1\" \"${1%.cts}.mts\"' -- {} \\;
+      - run: npm run build:esm
       - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:
           name: dist

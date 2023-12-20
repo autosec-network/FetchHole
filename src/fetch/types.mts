@@ -1,5 +1,6 @@
+import type { createHash } from 'node:crypto';
 import type { CacheType, IPBlockMode, LoggingLevel } from './config.mjs';
-import type { DohRequest } from './doh/types.js';
+import type { DohRequest } from './doh/types.mjs';
 import type { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 
 export interface PotentialThirdPartyResponse extends Response, Record<string, any> {}
@@ -95,6 +96,6 @@ interface StreamChunkEvents {
 	end: [];
 }
 
-export interface textStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: string]> {}
+export interface textStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: string] | []> {}
 
-export interface jsonStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: Record<string, any> | Record<string, any>[]]> {}
+export interface jsonStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: Record<string, any> | Record<string, any>[]] | []> {}

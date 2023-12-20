@@ -1,5 +1,5 @@
 import { CacheType } from '../fetch/config.mjs';
-import type { FetchHoleConfig, PotentialThirdPartyResponse } from '../fetch/types.js';
+import type { FetchHoleConfig, PotentialThirdPartyResponse } from '../fetch/types.mjs';
 import { CacheBase } from './base.mjs';
 
 export class MemoryCache extends CacheBase {

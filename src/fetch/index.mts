@@ -5,7 +5,7 @@ import { MemoryCache } from '../cache/memoryCache.mjs';
 import { CacheType, LoggingLevel, configForCall, defaultConfig } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 import { dropAuthRedirect, modifyRedirectRequest, responseTainted } from './extras.mjs';
-import type { FetchHoleConfig, FetchHoleFetchConfig, PotentialThirdPartyResponse, StreamableResponse } from './types.js';
+import type { FetchHoleConfig, FetchHoleFetchConfig, PotentialThirdPartyResponse, StreamableResponse } from './types.mjs';
 
 const chalk = new Chalk({ level: 1 });
 

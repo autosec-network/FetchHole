@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { defaultConfig } from '../fetch/config.mjs';
-import type { FetchHoleConfig } from '../fetch/types.js';
+import type { FetchHoleConfig } from '../fetch/types.mjs';
 
 export abstract class CacheBase {
 	protected config: FetchHoleConfig;

@@ -379,7 +379,7 @@ export class FetchHole {
 	 *
 	 * @throws {GraphQLError} If an unsafe redirect is encountered (i.e., a redirect to a different origin) and hardFail is set to true, or if the fetch fails for any other reason and hardFail is set to true.
 	 */
-	public async fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0) {
+	public fetch(destination: RequestInfo | URL, init?: FetchHoleFetchConfig, redirectCount: number = 0) {
 		return new Promise<StreamableResponse>(async (mainResolve, mainReject) => {
 			const config = configForCall(init, this.config);
 

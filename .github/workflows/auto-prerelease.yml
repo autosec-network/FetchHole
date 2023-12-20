@@ -67,11 +67,9 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - run: find ./src -type f -iname '*.mts' -exec bash -c 'mv "$0" "${0%.mts}.cts"' {} \;
-        shell: bash
+      - run: find ./src -name '*.mts' -exec sh -c 'mv \"$1\" \"${1%.mts}.cts\"' -- {} \\;
       - run: npm run build:cjs
-      - run: find ./src -type f -iname '*.cts' -exec bash -c 'mv "$0" "${0%.cts}.mts"' {} \;
-        shell: bash
+      - run: find ./src -name '*.cts' -exec sh -c 'mv \"$1\" \"${1%.cts}.mts\"' -- {} \\;
       - run: npm run build:esm
       - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
         with:

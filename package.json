@@ -31,12 +31,22 @@
 		"access": "public"
 	},
 	"exports": {
-		".": "./dist/index.mjs"
+		".": "./dist/index.mjs",
+		"./cache": "./dist/cache/index.mjs",
+		"./doh": "./dist/doh/index.mjs"
 	},
 	"imports": {
 		".": {
 			"default": "./dist/index.mjs",
 			"types": "./dist/index.d.mts"
+		},
+		"./cache": {
+			"default": "./dist/cache/index.mjs",
+			"types": "./dist/cache/index.d.mts"
+		},
+		"./doh": {
+			"default": "./dist/doh/index.mjs",
+			"types": "./dist/doh/index.d.mts"
 		}
 	},
 	"prettier": "@demosjarco/prettier-config",

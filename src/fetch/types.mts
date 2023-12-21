@@ -1,6 +1,6 @@
 import type { createHash } from 'node:crypto';
+import type { DohRequest } from '../doh/types.mjs';
 import type { CacheType, IPBlockMode, LoggingLevel } from './config.mjs';
-import type { DohRequest } from './doh/types.mjs';
 import type { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 
 export type RecursivePartial<T> = {

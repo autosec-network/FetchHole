@@ -1,7 +1,7 @@
 import { ok, strictEqual } from 'node:assert/strict';
 import { after, beforeEach, describe, it } from 'node:test';
-import { DohResolver } from '../dist/fetch/doh/doh.mjs';
-import type { DohRequest } from '../src/fetch/doh/types.d.ts';
+import { DohResolver } from '../dist/doh/doh.mjs';
+import type { DohRequest } from '../src/doh/types.mjs';
 
 describe('DohResolver Tests', () => {
 	const resolversToCheck: Record<string, Required<DohRequest['ct']>>[] = [

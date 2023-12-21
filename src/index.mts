@@ -3,5 +3,5 @@ export { FetchHole } from './fetch/index.mjs';
 export type { StreamableResponse } from './fetch/types.mjs';
 
 // Configuration Types
-export { IPBlockMode, LoggingLevel } from './fetch/config.mjs';
+export { CacheType, IPBlockMode, LoggingLevel } from './fetch/config.mjs';
 export type { FetchHoleConfig, FetchHoleFetchConfig } from './fetch/types.mjs';

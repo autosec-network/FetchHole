@@ -1,7 +1,6 @@
 import { fail, match, strictEqual } from 'node:assert/strict';
 import { after, beforeEach, describe, it } from 'node:test';
-import { CacheType } from '../dist/cache/index.mjs';
-import { FetchHole, LoggingLevel } from '../dist/index.mjs';
+import { CacheType, FetchHole, LoggingLevel } from '../dist/index.mjs';
 
 describe('Fetch Tests', () => {
 	let fetchHole: FetchHole;

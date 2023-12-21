@@ -41,8 +41,8 @@
 	},
 	"prettier": "@demosjarco/prettier-config",
 	"dependencies": {
-		"chalk": "^5.3.0",
-		"dns-packet": "^5.6.1"
+		"@leichtgewicht/ip-codec": "^2.0.4",
+		"chalk": "^5.3.0"
 	},
 	"devDependencies": {
 		"@demosjarco/prettier-config": "^1.0.1",

@@ -1,14 +1,9 @@
-import { CHECKING_DISABLED, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
+import type { Answer, DecodedPacket, Packet, Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { randomInt } from 'node:crypto';
+import * as dnsPacket from './dns-packet/index.cjs';
+import * as rcodes from './dns-packet/rcodes.cjs';
 import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.mjs';
-
-// @ts-ignore
-import { DNSSEC_OK } from 'dns-packet';
-// https://github.com/mafintosh/dns-packet/blob/master/index.js#L1655 It is exported, but the type doesn't show it. Tracked: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/67884
-// @ts-ignore
-import { toRcode } from 'dns-packet/rcodes.js';
-// import { toRcode } from 'dns-packet/rcodes.js'; It is exported, but the type doesn't show it.
 
 // https://iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
 export enum RCODE {
@@ -89,16 +84,16 @@ export class DohResolver {
 				};
 
 				if (question.flags) {
-					if ('cd' in parameters && Boolean(parameters.cd)) question.flags |= CHECKING_DISABLED;
-					if ('do' in parameters && Boolean(parameters.do)) question.flags |= DNSSEC_OK;
+					if ('cd' in parameters && Boolean(parameters.cd)) question.flags |= dnsPacket.CHECKING_DISABLED;
+					if ('do' in parameters && Boolean(parameters.do)) question.flags |= dnsPacket.DNSSEC_OK;
 				}
 
 				if (parameters.random_padding) {
 					question.id = await this.getRandomInt(1, 65534);
 				}
 
-				const response = await this.sendDohMsg('POST', parameters.ct, timeout, this.nameserver_url, encode(question));
-				return this.parseDnsMessage(decode(Buffer.from(await response.arrayBuffer())));
+				const response = await this.sendDohMsg('POST', parameters.ct, timeout, this.nameserver_url, dnsPacket.encode(question));
+				return this.parseDnsMessage(dnsPacket.decode(Buffer.from(await response.arrayBuffer())) as DecodedPacket);
 			}
 			case 'application/dns-json': {
 				const response = await this.sendDohMsg('GET', parameters.ct, timeout, this.makeJsonGetQuery(this.nameserver_url, parameters));
@@ -131,7 +126,7 @@ export class DohResolver {
 	private parseDnsMessage(packet: DecodedPacket): DohSuccessfulResponse {
 		return {
 			// @ts-ignore
-			Status: typeof packet.rcode === 'string' ? toRcode(packet.rcode) : packet.rcode,
+			Status: typeof packet.rcode === 'string' ? rcodes.toRcode(packet.rcode) : packet.rcode,
 			TC: packet.flag_tc,
 			RD: packet.flag_rd,
 			RA: packet.flag_ra,

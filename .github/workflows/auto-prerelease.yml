@@ -142,7 +142,8 @@ jobs:
       - uses: test-summary/action@fee35d7df20790255fe6aa92cf0f6d28092ecf2f # v2.2
         if: always()
         with:
-          paths: test-output.xml
+          paths: |
+            test-output.xml
           show: all
   tag:
     needs: [detect, test]

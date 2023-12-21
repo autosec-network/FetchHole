@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { configForCall } from '../fetch/config.mjs';
 import type { FetchHoleConfig, RecursivePartial } from '../fetch/types.mjs';

@@ -1,4 +1,4 @@
-import type { FetchHoleConfig, FetchHoleFetchConfig } from './types.mjs';
+import type { FetchHoleConfig, FetchHoleFetchConfig, RecursivePartial } from './types.mjs';
 
 /**
  * Enumerates types of caches which can be set up with FetchHole.
@@ -105,15 +105,15 @@ export const defaultConfig = {
 	redirectCount: 20,
 } satisfies FetchHoleConfig;
 
-export function configForCall(overrides: Partial<FetchHoleConfig> | FetchHoleFetchConfig = {}, initialConfig: FetchHoleConfig = defaultConfig): FetchHoleConfig {
-	let fetchHoleConfig: Partial<FetchHoleConfig>;
+export function configForCall(overrides: RecursivePartial<FetchHoleConfig> | FetchHoleFetchConfig = {}, initialConfig: FetchHoleConfig = defaultConfig): FetchHoleConfig {
+	let fetchHoleConfig: RecursivePartial<FetchHoleConfig>;
 
 	if ('fetchHole' in overrides) {
 		// Extract fetchHole property if overrides is of type FetchHoleFetchConfig
 		fetchHoleConfig = (overrides as FetchHoleFetchConfig).fetchHole || {};
 	} else {
-		// Use overrides directly if it's of type Partial<FetchHoleConfig>
-		fetchHoleConfig = (overrides as Partial<FetchHoleConfig>) || {};
+		// Use overrides directly if it's of type RecursivePartial<FetchHoleConfig>
+		fetchHoleConfig = (overrides as RecursivePartial<FetchHoleConfig>) || {};
 	}
 
 	return deepMerge(initialConfig, fetchHoleConfig);

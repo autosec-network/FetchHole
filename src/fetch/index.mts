@@ -2,10 +2,10 @@ import { Chalk } from 'chalk';
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import { MemoryCache } from '../cache/memoryCache.mjs';
-import { CacheType, LoggingLevel, configForCall, defaultConfig } from './config.mjs';
+import { CacheType, LoggingLevel, configForCall } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 import { dropAuthRedirect, modifyRedirectRequest, responseTainted } from './extras.mjs';
-import type { FetchHoleConfig, FetchHoleFetchConfig, PotentialThirdPartyResponse, StreamableResponse } from './types.mjs';
+import type { FetchHoleConfig, FetchHoleFetchConfig, PotentialThirdPartyResponse, RecursivePartial, StreamableResponse } from './types.mjs';
 
 const chalk = new Chalk({ level: 1 });
 
@@ -16,11 +16,8 @@ export class FetchHole {
 	/** Effective configuration. */
 	protected config: FetchHoleConfig;
 
-	constructor(config: Partial<FetchHoleConfig> = {}) {
-		this.config = {
-			...defaultConfig,
-			...config,
-		};
+	constructor(config: RecursivePartial<FetchHoleConfig> = {}) {
+		this.config = configForCall(config);
 	}
 
 	protected logWriter(level: LoggingLevel, minimum: any[], info: any[] = [], verbose: any[] = [], debug: any[] = [], warn: boolean = false, error: boolean = false) {

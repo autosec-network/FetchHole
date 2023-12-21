@@ -2,24 +2,8 @@ import type { Answer, DecodedPacket, Packet, Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { randomInt } from 'node:crypto';
 import * as dnsPacket from './dns-packet/index.cjs';
-import * as rcodes from './dns-packet/rcodes.cjs';
+import { Rcodes } from './dns-packet/rcodes.mjs';
 import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.mjs';
-
-// https://iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
-export enum RCODE {
-	NoError = 0,
-	FormErr = 1,
-	ServFail = 2,
-	NXDomain = 3,
-	NotImp = 4,
-	Refused = 5,
-	YXDomain = 6,
-	YXRRSet = 7,
-	NXRRSet = 8,
-	NotAuth = 9,
-	NotZone = 10,
-	DSOTYPENI = 11,
-}
 
 export class DohResolver {
 	private nameserver_url: URL;
@@ -126,7 +110,7 @@ export class DohResolver {
 	private parseDnsMessage(packet: DecodedPacket): DohSuccessfulResponse {
 		return {
 			// @ts-ignore
-			Status: typeof packet.rcode === 'string' ? rcodes.toRcode(packet.rcode) : packet.rcode,
+			Status: typeof packet.rcode === 'string' ? Rcodes.toRcode(packet.rcode) : packet.rcode,
 			TC: packet.flag_tc,
 			RD: packet.flag_rd,
 			RA: packet.flag_ra,

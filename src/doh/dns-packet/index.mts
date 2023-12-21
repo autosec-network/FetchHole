@@ -1,12 +1,11 @@
-'use strict';
-
-const { Buffer } = require('node:buffer');
-const types = require('./types.cjs');
-const rcodes = require('./rcodes.cjs');
-const opcodes = require('./opcodes.cjs');
-const classes = require('./classes.cjs');
-const optioncodes = require('./optioncodes.cjs');
-const ip = require('@leichtgewicht/ip-codec');
+/// <reference types="../../../node_modules/@leichtgewicht/ip-codec/types/index.d.ts" />
+import { familyOf, decode as ipDecode, encode as ipEncode, v4, v6 } from '@leichtgewicht/ip-codec';
+import { Buffer } from 'node:buffer';
+import { Classes } from './classes.mjs';
+import { OpCodes } from './opcodes.mjs';
+import { OptionCodes } from './optioncodes.mjs';
+import { Rcodes } from './rcodes.mjs';
+import { Types } from './types.mjs';
 
 const QUERY_FLAG = 0;
 const RESPONSE_FLAG = 1 << 15;
@@ -15,141 +14,145 @@ const NOT_FLUSH_MASK = ~FLUSH_MASK;
 const QU_MASK = 1 << 15;
 const NOT_QU_MASK = ~QU_MASK;
 
-const name = (exports.name = {});
+export interface EnhancedDecodedPacket extends DecodedPacket {
+	opcode: string;
+	rcode: string;
+}
 
-name.encode = function (str, buf, offset, { mail = false } = {}) {
-	if (!buf) buf = Buffer.alloc(name.encodingLength(str));
-	if (!offset) offset = 0;
-	const oldOffset = offset;
+export namespace name {
+	export function encode(str: string, buf: Buffer = Buffer.alloc(encodingLength(str)), offset: number = 0, options: { mail?: boolean } = {}): Buffer {
+		const oldOffset = offset;
 
-	// strip leading and trailing .
-	const n = str.replace(/^\.|\.$/gm, '');
-	if (n.length) {
-		let list = [];
-		if (mail) {
-			let localPart = '';
-			n.split('.').forEach((label) => {
-				if (label.endsWith('\\')) {
-					localPart += (localPart.length ? '.' : '') + label.slice(0, -1);
+		// strip leading and trailing .
+		const n = str.replace(/^\.|\.$/gm, '');
+
+		if (n.length) {
+			const list: string[] = options.mail ? processMailLabels(n) : n.split('.');
+
+			for (const label of list) {
+				const len = buf.write(label, offset + 1);
+				buf[offset] = len;
+				offset += len + 1;
+			}
+		}
+
+		buf[offset++] = 0;
+		encode.bytes = offset - oldOffset;
+		return buf;
+	}
+
+	encode.bytes = 0;
+
+	function processMailLabels(n: string): string[] {
+		const list: string[] = [];
+		let localPart = '';
+		n.split('.').forEach((label) => {
+			if (label.endsWith('\\')) {
+				localPart += (localPart.length ? '.' : '') + label.slice(0, -1);
+			} else {
+				if (list.length === 0 && localPart.length) {
+					list.push(localPart + '.' + label);
 				} else {
-					if (list.length === 0 && localPart.length) {
-						list.push(localPart + '.' + label);
-					} else {
-						list.push(label);
-					}
+					list.push(label);
 				}
-			});
-		} else {
-			list = n.split('.');
-		}
-
-		for (let i = 0; i < list.length; i++) {
-			const len = buf.write(list[i], offset + 1);
-			buf[offset] = len;
-			offset += len + 1;
-		}
+			}
+		});
+		return list;
 	}
 
-	buf[offset++] = 0;
+	export function decode(buf: Buffer, offset: number = 0, options: { mail?: boolean } = {}): string {
+		const list: string[] = [];
+		let oldOffset = offset;
+		let totalLength = 0;
+		let consumedBytes = 0;
+		let jumped = false;
 
-	name.encode.bytes = offset - oldOffset;
-	return buf;
-};
-
-name.encode.bytes = 0;
-
-name.decode = function (buf, offset, { mail = false } = {}) {
-	if (!offset) offset = 0;
-
-	const list = [];
-	let oldOffset = offset;
-	let totalLength = 0;
-	let consumedBytes = 0;
-	let jumped = false;
-
-	while (true) {
-		if (offset >= buf.length) {
-			throw new Error('Cannot decode name (buffer overflow)');
-		}
-		const len = buf[offset++];
-		consumedBytes += jumped ? 0 : 1;
-
-		if (len === 0) {
-			break;
-		} else if ((len & 0xc0) === 0) {
-			if (offset + len > buf.length) {
+		while (true) {
+			if (offset >= buf.length) {
 				throw new Error('Cannot decode name (buffer overflow)');
 			}
-			totalLength += len + 1;
-			if (totalLength > 254) {
-				throw new Error('Cannot decode name (name too long)');
+			const len = buf[offset++];
+			if (len === undefined) {
+				throw new Error('Cannot decode name (unexpected end of buffer)');
 			}
-			let label = buf.toString('utf-8', offset, offset + len);
-			if (mail) {
-				label = label.replace(/\./g, '\\.');
-			}
-			list.push(label);
-			offset += len;
-			consumedBytes += jumped ? 0 : len;
-		} else if ((len & 0xc0) === 0xc0) {
-			if (offset + 1 > buf.length) {
-				throw new Error('Cannot decode name (buffer overflow)');
-			}
-			const jumpOffset = buf.readUInt16BE(offset - 1) - 0xc000;
-			if (jumpOffset >= oldOffset) {
-				// Allow only pointers to prior data. RFC 1035, section 4.1.4 states:
-				// "[...] an entire domain name or a list of labels at the end of a domain name
-				// is replaced with a pointer to a prior occurance (sic) of the same name."
-				throw new Error('Cannot decode name (bad pointer)');
-			}
-			offset = jumpOffset;
-			oldOffset = jumpOffset;
 			consumedBytes += jumped ? 0 : 1;
-			jumped = true;
-		} else {
-			throw new Error('Cannot decode name (bad label)');
+
+			if (len === 0) {
+				break;
+			} else if ((len & 0xc0) === 0) {
+				if (offset + len > buf.length) {
+					throw new Error('Cannot decode name (buffer overflow)');
+				}
+				totalLength += len + 1;
+				if (totalLength > 254) {
+					throw new Error('Cannot decode name (name too long)');
+				}
+				const label = buf.toString('utf-8', offset, offset + len);
+				list.push(options.mail ? label.replace(/\./g, '\\.') : label);
+				offset += len;
+				consumedBytes += jumped ? 0 : len;
+			} else if ((len & 0xc0) === 0xc0) {
+				if (offset + 1 > buf.length) {
+					throw new Error('Cannot decode name (buffer overflow)');
+				}
+				const jumpOffset = buf.readUInt16BE(offset - 1) - 0xc000;
+				if (jumpOffset >= oldOffset) {
+					// Allow only pointers to prior data. RFC 1035, section 4.1.4 states:
+					// "[...] an entire domain name or a list of labels at the end of a domain name
+					// is replaced with a pointer to a prior occurance (sic) of the same name."
+					throw new Error('Cannot decode name (bad pointer)');
+				}
+				offset = jumpOffset;
+				oldOffset = jumpOffset;
+				consumedBytes += jumped ? 0 : 1;
+				jumped = true;
+			} else {
+				throw new Error('Cannot decode name (bad label)');
+			}
 		}
+
+		decode.bytes = consumedBytes;
+		return list.length === 0 ? '.' : list.join('.');
 	}
 
-	name.decode.bytes = consumedBytes;
-	return list.length === 0 ? '.' : list.join('.');
-};
+	decode.bytes = 0;
 
-name.decode.bytes = 0;
+	export function encodingLength(n: string): number {
+		if (n === '.' || n === '..') return 1;
+		return Buffer.byteLength(n.replace(/^\.|\.$/gm, '')) + 2;
+	}
+}
 
-name.encodingLength = function (n) {
-	if (n === '.' || n === '..') return 1;
-	return Buffer.byteLength(n.replace(/^\.|\.$/gm, '')) + 2;
-};
+namespace string {
+	// Define the structure for encode and decode functions with 'bytes' property
+	export const encode = Object.assign(
+		function (s: string, buf: Buffer = Buffer.alloc(string.encodingLength(s)), offset: number = 0): Buffer {
+			const len = buf.write(s, offset + 1);
+			buf[offset] = len;
+			encode.bytes = len + 1;
+			return buf;
+		},
+		{ bytes: 0 },
+	);
 
-const string = {};
+	export const decode = Object.assign(
+		function (buf: Buffer, offset: number = 0): string {
+			const len = buf[offset];
+			if (len === undefined) {
+				throw new Error('Length byte is undefined');
+			}
+			const s = buf.toString('utf-8', offset + 1, offset + 1 + len);
+			decode.bytes = len + 1;
+			return s;
+		},
+		{ bytes: 0 },
+	);
 
-string.encode = function (s, buf, offset) {
-	if (!buf) buf = Buffer.alloc(string.encodingLength(s));
-	if (!offset) offset = 0;
-
-	const len = buf.write(s, offset + 1);
-	buf[offset] = len;
-	string.encode.bytes = len + 1;
-	return buf;
-};
-
-string.encode.bytes = 0;
-
-string.decode = function (buf, offset) {
-	if (!offset) offset = 0;
-
-	const len = buf[offset];
-	const s = buf.toString('utf-8', offset + 1, offset + 1 + len);
-	string.decode.bytes = len + 1;
-	return s;
-};
-
-string.decode.bytes = 0;
-
-string.encodingLength = function (s) {
-	return Buffer.byteLength(s) + 1;
-};
+	// Implementation of the encodingLength function
+	export function encodingLength(s: string): number {
+		return Buffer.byteLength(s) + 1;
+	}
+}
 
 const header = {};
 
@@ -182,7 +185,7 @@ header.decode = function (buf, offset) {
 		type: flags & RESPONSE_FLAG ? 'response' : 'query',
 		flags: flags & 32767,
 		flag_qr: ((flags >> 15) & 0x1) === 1,
-		opcode: opcodes.toString((flags >> 11) & 0xf),
+		opcode: OpCodes.toString((flags >> 11) & 0xf),
 		flag_aa: ((flags >> 10) & 0x1) === 1,
 		flag_tc: ((flags >> 9) & 0x1) === 1,
 		flag_rd: ((flags >> 8) & 0x1) === 1,
@@ -190,7 +193,7 @@ header.decode = function (buf, offset) {
 		flag_z: ((flags >> 6) & 0x1) === 1,
 		flag_ad: ((flags >> 5) & 0x1) === 1,
 		flag_cd: ((flags >> 4) & 0x1) === 1,
-		rcode: rcodes.toString(flags & 0xf),
+		rcode: Rcodes.toString(flags & 0xf),
 		questions: new Array(buf.readUInt16BE(offset + 4)),
 		answers: new Array(buf.readUInt16BE(offset + 6)),
 		authorities: new Array(buf.readUInt16BE(offset + 8)),
@@ -204,7 +207,7 @@ header.encodingLength = function () {
 	return 12;
 };
 
-const runknown = (exports.unknown = {});
+export const runknown = {};
 
 runknown.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(runknown.encodingLength(data));
@@ -234,7 +237,7 @@ runknown.encodingLength = function (data) {
 	return data.length + 2;
 };
 
-const rns = (exports.ns = {});
+export const rns = {};
 
 rns.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rns.encodingLength(data));
@@ -264,7 +267,7 @@ rns.encodingLength = function (data) {
 	return name.encodingLength(data) + 2;
 };
 
-const rsoa = (exports.soa = {});
+export const rsoa = {};
 
 rsoa.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rsoa.encodingLength(data));
@@ -326,7 +329,7 @@ rsoa.encodingLength = function (data) {
 	return 22 + name.encodingLength(data.mname) + name.encodingLength(data.rname);
 };
 
-const rtxt = (exports.txt = {});
+export const rtxt = {};
 
 rtxt.encode = function (data, buf, offset) {
 	if (!Array.isArray(data)) data = [data];
@@ -395,7 +398,7 @@ rtxt.encodingLength = function (data) {
 	return length;
 };
 
-const rnull = (exports.null = {});
+export const rnull = {};
 
 rnull.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rnull.encodingLength(data));
@@ -439,7 +442,7 @@ rnull.encodingLength = function (data) {
 	return (Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data)) + 2;
 };
 
-const rhinfo = (exports.hinfo = {});
+export const rhinfo = {};
 
 rhinfo.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rhinfo.encodingLength(data));
@@ -479,9 +482,9 @@ rhinfo.encodingLength = function (data) {
 	return string.encodingLength(data.cpu) + string.encodingLength(data.os) + 2;
 };
 
-const rptr = (exports.ptr = {});
-const rcname = (exports.cname = rptr);
-const rdname = (exports.dname = rptr);
+export const rptr = {};
+export const rcname = rptr;
+export const rdname = rptr;
 
 rptr.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rptr.encodingLength(data));
@@ -509,7 +512,7 @@ rptr.encodingLength = function (data) {
 	return name.encodingLength(data) + 2;
 };
 
-const rsrv = (exports.srv = {});
+export const rsrv = {};
 
 rsrv.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rsrv.encodingLength(data));
@@ -550,7 +553,7 @@ rsrv.encodingLength = function (data) {
 	return 8 + name.encodingLength(data.target);
 };
 
-const rcaa = (exports.caa = {});
+export const rcaa = {};
 
 rcaa.ISSUER_CRITICAL = 1 << 7;
 
@@ -606,7 +609,7 @@ rcaa.encodingLength = function (data) {
 	return string.encodingLength(data.tag) + string.encodingLength(data.value) + 2;
 };
 
-const rmx = (exports.mx = {});
+export const rmx = {};
 
 rmx.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rmx.encodingLength(data));
@@ -646,7 +649,7 @@ rmx.encodingLength = function (data) {
 	return 4 + name.encodingLength(data.exchange);
 };
 
-const ra = (exports.a = {});
+export const ra = {};
 
 ra.encode = function (host, buf, offset) {
 	if (!buf) buf = Buffer.alloc(ra.encodingLength(host));
@@ -654,7 +657,7 @@ ra.encode = function (host, buf, offset) {
 
 	buf.writeUInt16BE(4, offset);
 	offset += 2;
-	ip.v4.encode(host, buf, offset);
+	v4.encode(host, buf, offset);
 	ra.encode.bytes = 6;
 	return buf;
 };
@@ -665,7 +668,7 @@ ra.decode = function (buf, offset) {
 	if (!offset) offset = 0;
 
 	offset += 2;
-	const host = ip.v4.decode(buf, offset);
+	const host = v4.decode(buf, offset);
 	ra.decode.bytes = 6;
 	return host;
 };
@@ -676,7 +679,7 @@ ra.encodingLength = function () {
 	return 6;
 };
 
-const raaaa = (exports.aaaa = {});
+export const raaaa = {};
 
 raaaa.encode = function (host, buf, offset) {
 	if (!buf) buf = Buffer.alloc(raaaa.encodingLength(host));
@@ -684,7 +687,7 @@ raaaa.encode = function (host, buf, offset) {
 
 	buf.writeUInt16BE(16, offset);
 	offset += 2;
-	ip.v6.encode(host, buf, offset);
+	v6.encode(host, buf, offset);
 	raaaa.encode.bytes = 18;
 	return buf;
 };
@@ -695,7 +698,7 @@ raaaa.decode = function (buf, offset) {
 	if (!offset) offset = 0;
 
 	offset += 2;
-	const host = ip.v6.decode(buf, offset);
+	const host = v6.decode(buf, offset);
 	raaaa.decode.bytes = 18;
 	return host;
 };
@@ -706,14 +709,14 @@ raaaa.encodingLength = function () {
 	return 18;
 };
 
-const roption = (exports.option = {});
+export const roption = {};
 
 roption.encode = function (option, buf, offset) {
 	if (!buf) buf = Buffer.alloc(roption.encodingLength(option));
 	if (!offset) offset = 0;
 	const oldOffset = offset;
 
-	const code = optioncodes.toCode(option.code);
+	const code = OptionCodes.toCode(option.code);
 	buf.writeUInt16BE(code, offset);
 	offset += 2;
 	if (option.data) {
@@ -728,8 +731,8 @@ roption.encode = function (option, buf, offset) {
 			case 8: // ECS
 				// note: do IP math before calling
 				const spl = option.sourcePrefixLength || 0;
-				const fam = option.family || ip.familyOf(option.ip);
-				const ipBuf = ip.encode(option.ip, Buffer.alloc);
+				const fam = option.family || familyOf(option.ip);
+				const ipBuf = ipEncode(option.ip, Buffer.alloc);
 				const ipLen = Math.ceil(spl / 8);
 				buf.writeUInt16BE(ipLen + 4, offset);
 				offset += 2;
@@ -786,7 +789,7 @@ roption.decode = function (buf, offset) {
 	if (!offset) offset = 0;
 	const option = {};
 	option.code = buf.readUInt16BE(offset);
-	option.type = optioncodes.toString(option.code);
+	option.type = OptionCodes.toString(option.code);
 	offset += 2;
 	const len = buf.readUInt16BE(offset);
 	offset += 2;
@@ -800,7 +803,7 @@ roption.decode = function (buf, offset) {
 			option.scopePrefixLength = buf.readUInt8(offset++);
 			const padded = Buffer.alloc(option.family === 1 ? 4 : 16);
 			buf.copy(padded, 0, offset, offset + len - 4);
-			option.ip = ip.decode(padded);
+			option.ip = ipDecode(padded);
 			break;
 		// case 12: Padding.  No decode makes sense.
 		case 11: // KEEP-ALIVE
@@ -828,7 +831,7 @@ roption.encodingLength = function (option) {
 	if (option.data) {
 		return option.data.length + 4;
 	}
-	const code = optioncodes.toCode(option.code);
+	const code = OptionCodes.toCode(option.code);
 	switch (code) {
 		case 8: // ECS
 			const spl = option.sourcePrefixLength || 0;
@@ -843,7 +846,7 @@ roption.encodingLength = function (option) {
 	throw new Error(`Unknown roption code: ${option.code}`);
 };
 
-const ropt = (exports.opt = {});
+export const ropt = {};
 
 ropt.encode = function (options, buf, offset) {
 	if (!buf) buf = Buffer.alloc(ropt.encodingLength(options));
@@ -883,7 +886,7 @@ ropt.encodingLength = function (options) {
 	return 2 + encodingLengthList(options || [], roption);
 };
 
-const rdnskey = (exports.dnskey = {});
+export const rdnskey = {};
 
 rdnskey.PROTOCOL_DNSSEC = 3;
 rdnskey.ZONE_KEY = 0x80;
@@ -943,7 +946,7 @@ rdnskey.encodingLength = function (key) {
 	return 6 + Buffer.byteLength(key.key);
 };
 
-const rrrsig = (exports.rrsig = {});
+export const rrrsig = {};
 
 rrrsig.encode = function (sig, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rrrsig.encodingLength(sig));
@@ -956,7 +959,7 @@ rrrsig.encode = function (sig, buf, offset) {
 	}
 
 	offset += 2; // Leave space for length
-	buf.writeUInt16BE(types.toType(sig.typeCovered), offset);
+	buf.writeUInt16BE(Types.toType(sig.typeCovered), offset);
 	offset += 2;
 	buf.writeUInt8(sig.algorithm, offset);
 	offset += 1;
@@ -989,7 +992,7 @@ rrrsig.decode = function (buf, offset) {
 	var sig = {};
 	var length = buf.readUInt16BE(offset);
 	offset += 2;
-	sig.typeCovered = types.toString(buf.readUInt16BE(offset));
+	sig.typeCovered = Types.toString(buf.readUInt16BE(offset));
 	offset += 2;
 	sig.algorithm = buf.readUInt8(offset);
 	offset += 1;
@@ -1017,7 +1020,7 @@ rrrsig.encodingLength = function (sig) {
 	return 20 + name.encodingLength(sig.signersName) + Buffer.byteLength(sig.signature);
 };
 
-const rrp = (exports.rp = {});
+export const rrp = {};
 
 rrp.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rrp.encodingLength(data));
@@ -1065,7 +1068,7 @@ typebitmap.encode = function (typelist, buf, offset) {
 
 	var typesByWindow = [];
 	for (var i = 0; i < typelist.length; i++) {
-		var typeid = types.toType(typelist[i]);
+		var typeid = Types.toType(typelist[i]);
 		if (typesByWindow[typeid >> 8] === undefined) {
 			typesByWindow[typeid >> 8] = [];
 		}
@@ -1104,7 +1107,7 @@ typebitmap.decode = function (buf, offset, length) {
 			var b = buf.readUInt8(offset + i);
 			for (var j = 0; j < 8; j++) {
 				if (b & (1 << (7 - j))) {
-					var typeid = types.toString((window << 8) | (i << 3) | j);
+					var typeid = Types.toString((window << 8) | (i << 3) | j);
 					typelist.push(typeid);
 				}
 			}
@@ -1121,7 +1124,7 @@ typebitmap.decode.bytes = 0;
 typebitmap.encodingLength = function (typelist) {
 	var extents = [];
 	for (var i = 0; i < typelist.length; i++) {
-		var typeid = types.toType(typelist[i]);
+		var typeid = Types.toType(typelist[i]);
 		extents[typeid >> 8] = Math.max(extents[typeid >> 8] || 0, typeid & 0xff);
 	}
 
@@ -1135,7 +1138,7 @@ typebitmap.encodingLength = function (typelist) {
 	return len;
 };
 
-const rnsec = (exports.nsec = {});
+export const rnsec = {};
 
 rnsec.encode = function (record, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rnsec.encodingLength(record));
@@ -1177,7 +1180,7 @@ rnsec.encodingLength = function (record) {
 	return 2 + name.encodingLength(record.nextDomain) + typebitmap.encodingLength(record.rrtypes);
 };
 
-const rnsec3 = (exports.nsec3 = {});
+export const rnsec3 = {};
 
 rnsec3.encode = function (record, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rnsec3.encodingLength(record));
@@ -1253,7 +1256,7 @@ rnsec3.encodingLength = function (record) {
 	return 8 + record.salt.length + record.nextDomain.length + typebitmap.encodingLength(record.rrtypes);
 };
 
-const rds = (exports.ds = {});
+export const rds = {};
 
 rds.encode = function (digest, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rds.encodingLength(digest));
@@ -1307,7 +1310,7 @@ rds.encodingLength = function (digest) {
 	return 6 + Buffer.byteLength(digest.digest);
 };
 
-const rsshfp = (exports.sshfp = {});
+export const rsshfp = {};
 
 rsshfp.getFingerprintLengthForHashType = function getFingerprintLengthForHashType(hashType) {
 	switch (hashType) {
@@ -1371,7 +1374,7 @@ rsshfp.encodingLength = function (record) {
 	return 4 + Buffer.from(record.fingerprint, 'hex').byteLength;
 };
 
-const rnaptr = (exports.naptr = {});
+export const rnaptr = {};
 
 rnaptr.encode = function (data, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rnaptr.encodingLength(data));
@@ -1424,7 +1427,7 @@ rnaptr.encodingLength = function (data) {
 	return string.encodingLength(data.flags) + string.encodingLength(data.services) + string.encodingLength(data.regexp) + name.encodingLength(data.replacement) + 6;
 };
 
-const rtlsa = (exports.tlsa = {});
+export const rtlsa = {};
 
 rtlsa.encode = function (cert, buf, offset) {
 	if (!buf) buf = Buffer.alloc(rtlsa.encodingLength(cert));
@@ -1478,7 +1481,7 @@ rtlsa.encodingLength = function (cert) {
 	return 5 + Buffer.byteLength(cert.certificate);
 };
 
-const renc = (exports.record = function (type) {
+export const renc = function (type) {
 	switch (type.toUpperCase()) {
 		case 'A':
 			return ra;
@@ -1528,9 +1531,9 @@ const renc = (exports.record = function (type) {
 			return rtlsa;
 	}
 	return runknown;
-});
+};
 
-const answer = (exports.answer = {});
+export const answer = {};
 
 answer.encode = function (a, buf, offset) {
 	if (!buf) buf = Buffer.alloc(answer.encodingLength(a));
@@ -1541,7 +1544,7 @@ answer.encode = function (a, buf, offset) {
 	name.encode(a.name, buf, offset);
 	offset += name.encode.bytes;
 
-	buf.writeUInt16BE(types.toType(a.type), offset);
+	buf.writeUInt16BE(Types.toType(a.type), offset);
 
 	if (a.type.toUpperCase() === 'OPT') {
 		if (a.name !== '.') {
@@ -1556,7 +1559,7 @@ answer.encode = function (a, buf, offset) {
 		ropt.encode(a.options || [], buf, offset);
 		offset += ropt.encode.bytes;
 	} else {
-		let klass = classes.toClass(a.class === undefined ? 'IN' : a.class);
+		let klass = Classes.toClass(a.class === undefined ? 'IN' : a.class);
 		if (a.flush) klass |= FLUSH_MASK; // the 1st bit of the class is the flush bit
 		buf.writeUInt16BE(klass, offset + 2);
 		buf.writeUInt32BE(a.ttl || 0, offset + 4);
@@ -1581,7 +1584,7 @@ answer.decode = function (buf, offset) {
 
 	a.name = name.decode(buf, offset);
 	offset += name.decode.bytes;
-	a.type = types.toString(buf.readUInt16BE(offset));
+	a.type = Types.toString(buf.readUInt16BE(offset));
 	if (a.type === 'OPT') {
 		a.udpPayloadSize = buf.readUInt16BE(offset + 2);
 		a.extendedRcode = buf.readUInt8(offset + 4);
@@ -1594,7 +1597,7 @@ answer.decode = function (buf, offset) {
 		const klass = buf.readUInt16BE(offset + 2);
 		a.ttl = buf.readUInt32BE(offset + 4);
 
-		a.class = classes.toString(klass & NOT_FLUSH_MASK);
+		a.class = Classes.toString(klass & NOT_FLUSH_MASK);
 		a.flush = !!(klass & FLUSH_MASK);
 
 		const enc = renc(a.type);
@@ -1613,7 +1616,7 @@ answer.encodingLength = function (a) {
 	return name.encodingLength(a.name) + 8 + renc(a.type).encodingLength(data);
 };
 
-const question = (exports.question = {});
+export const question = {};
 
 question.encode = function (q, buf, offset) {
 	if (!buf) buf = Buffer.alloc(question.encodingLength(q));
@@ -1624,10 +1627,10 @@ question.encode = function (q, buf, offset) {
 	name.encode(q.name, buf, offset);
 	offset += name.encode.bytes;
 
-	buf.writeUInt16BE(types.toType(q.type), offset);
+	buf.writeUInt16BE(Types.toType(q.type), offset);
 	offset += 2;
 
-	buf.writeUInt16BE(classes.toClass(q.class === undefined ? 'IN' : q.class), offset);
+	buf.writeUInt16BE(Classes.toClass(q.class === undefined ? 'IN' : q.class), offset);
 	offset += 2;
 
 	question.encode.bytes = offset - oldOffset;
@@ -1645,10 +1648,10 @@ question.decode = function (buf, offset) {
 	q.name = name.decode(buf, offset);
 	offset += name.decode.bytes;
 
-	q.type = types.toString(buf.readUInt16BE(offset));
+	q.type = Types.toString(buf.readUInt16BE(offset));
 	offset += 2;
 
-	q.class = classes.toString(buf.readUInt16BE(offset));
+	q.class = Classes.toString(buf.readUInt16BE(offset));
 	offset += 2;
 
 	const qu = !!(q.class & QU_MASK);

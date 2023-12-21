@@ -1,5 +1,5 @@
 import type { RecordType } from 'dns-packet';
-import type { RCODE } from './doh.mjs';
+import type { Rcode } from './dns-packet/rcodes.mjs';
 
 export type ExcludeUndefined<T> = T extends undefined ? never : T;
 
@@ -67,7 +67,7 @@ export interface DohSuccessfulResponse extends Record<string, any> {
 	/**
 	 * The Response Code of the DNS Query. Defined here: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
 	 */
-	Status: RCODE;
+	Status: Rcode;
 	/**
 	 * Whether the response is truncated. This happens when the DNS answer is larger than a single UDP or TCP packet
 	 */

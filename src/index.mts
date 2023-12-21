@@ -7,7 +7,7 @@ export { IPBlockMode, LoggingLevel } from './fetch/config.mjs';
 export type { FetchHoleConfig, FetchHoleFetchConfig } from './fetch/types.mjs';
 
 // DoH
-export { DohResolver, RCODE } from './doh/doh.mjs';
+export { DohResolver } from './doh/doh.mjs';
 export type { DohErrorResponse, DohRequest, DohSuccessfulResponse } from './doh/types.mjs';
 
 // Cache

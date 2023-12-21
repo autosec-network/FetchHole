@@ -35,7 +35,9 @@ describe('Fetch Tests', () => {
 	it('1 redirect - expect any redirect', async () => {
 		const response = await fetchHole.fetch('https://tinyurl.com/mtyrsvr', {
 			fetchHole: {
-				logLevel: LoggingLevel.INFO,
+				logLevel: LoggingLevel.DEBUG,
+				// Something about async tests doesn't set this back to default
+				redirectCount: undefined,
 			},
 		});
 		const json = await response.json();

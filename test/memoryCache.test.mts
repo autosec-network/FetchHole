@@ -1,7 +1,7 @@
 import { strictEqual } from 'node:assert/strict';
 import { randomBytes, randomInt } from 'node:crypto';
-import { beforeEach, describe, it } from 'node:test';
-import { MemoryCache } from '../dist/cache/memoryCache.mjs';
+import { after, beforeEach, describe, it } from 'node:test';
+import { MemoryCache } from '../dist/index.mjs';
 
 /**
  * Class representing a generator for random responses.
@@ -179,3 +179,10 @@ describe('MemoryCache Tests', () => {
 		strictEqual(cachedResponse, undefined, 'No response should be found after deletion');
 	});
 });
+
+after(
+	() => {
+		process.exit();
+	},
+	{ timeout: 1 * 60 * 1000 },
+);

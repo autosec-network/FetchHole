@@ -1,4 +1,5 @@
 import type { RecordType } from 'dns-packet';
+import type { RCODE } from './doh.mjs';
 
 export type ExcludeUndefined<T> = T extends undefined ? never : T;
 
@@ -42,7 +43,7 @@ export interface DohRequest {
 	random_padding?: string;
 }
 
-interface ResponseValues {
+export interface ResponseValues {
 	/**
 	 * FQDN with trailing dot
 	 */
@@ -62,11 +63,11 @@ interface ResponseValues {
 	data: string;
 }
 
-export interface DohSuccessfulResponse {
+export interface DohSuccessfulResponse extends Record<string, any> {
 	/**
 	 * The Response Code of the DNS Query. Defined here: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
 	 */
-	Status: number;
+	Status: RCODE;
 	/**
 	 * Whether the response is truncated. This happens when the DNS answer is larger than a single UDP or TCP packet
 	 */

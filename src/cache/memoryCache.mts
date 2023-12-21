@@ -1,5 +1,5 @@
 import { CacheType } from '../fetch/config.mjs';
-import type { FetchHoleConfig, PotentialThirdPartyResponse } from '../fetch/types.js';
+import type { FetchHoleConfig, PotentialThirdPartyResponse } from '../fetch/types.mjs';
 import { CacheBase } from './base.mjs';
 
 export class MemoryCache extends CacheBase {
@@ -51,7 +51,7 @@ export class MemoryCache extends CacheBase {
 					newHeaders.set('X-FetchHole-Cache-Status', `HIT-${CacheType.Memory}`);
 					newResponseInfo['headers'] = newHeaders;
 
-					return clonedCachedResponse;
+					return new Response(clonedCachedResponse.body, newResponseInfo);
 				} else {
 					// Request doesn't match
 					return undefined;

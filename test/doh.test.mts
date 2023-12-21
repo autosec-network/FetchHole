@@ -1,7 +1,6 @@
 import { ok, strictEqual } from 'node:assert/strict';
-import { beforeEach, describe, it } from 'node:test';
-import { DohResolver } from '../dist/fetch/doh/doh.mjs';
-import type { DohRequest } from '../src/fetch/doh/types.d.ts';
+import { after, beforeEach, describe, it } from 'node:test';
+import { DohResolver, type DohRequest } from '../dist/index.mjs';
 
 describe('DohResolver Tests', () => {
 	const resolversToCheck: Record<string, Required<DohRequest['ct']>>[] = [
@@ -20,6 +19,9 @@ describe('DohResolver Tests', () => {
 		{
 			'https://dns.quad9.net/dns-query': 'application/dns-message',
 		},
+		{
+			'https://security.cloudflare-dns.com/dns-query': 'application/dns-message',
+		},
 	];
 
 	for (const resolverRecord of resolversToCheck) {
@@ -36,11 +38,15 @@ describe('DohResolver Tests', () => {
 					['microsoft.com', 'AAAA'],
 					[DohResolver.getReverseIpv4('8.8.8.8'), 'PTR'],
 					[DohResolver.getReverseIpv6('2001:4860:4860::8888'), 'PTR'],
+					['malware.testcategory.com', 'A'],
 				]);
 
 				for (const [name, type] of queriesToCheck.entries()) {
 					it(`Getting ${type} for ${name}`, async () => {
 						const response = await dohResolver.query({ name, type, ct });
+						if (name == 'malware.testcategory.com') {
+							console.debug(response);
+						}
 
 						// Assert that the response contains the required properties of DohSuccessfulResponse
 						strictEqual(typeof response.Status, 'number');
@@ -96,3 +102,10 @@ describe('DohResolver Tests', () => {
 		}
 	}
 });
+
+after(
+	() => {
+		process.exit();
+	},
+	{ timeout: 1 * 60 * 1000 },
+);

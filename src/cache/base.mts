@@ -1,15 +1,12 @@
 import { createHash } from 'node:crypto';
-import { defaultConfig } from '../fetch/config.mjs';
-import type { FetchHoleConfig } from '../fetch/types.js';
+import { configForCall } from '../fetch/config.mjs';
+import type { FetchHoleConfig, RecursivePartial } from '../fetch/types.mjs';
 
 export abstract class CacheBase {
 	protected config: FetchHoleConfig;
 
-	constructor(config: Partial<FetchHoleConfig> = {}) {
-		this.config = {
-			...defaultConfig,
-			...config,
-		};
+	constructor(config: RecursivePartial<FetchHoleConfig> = {}) {
+		this.config = configForCall(config);
 	}
 
 	protected areHeadersEqual(headers1: Headers, headers2: Headers): boolean {

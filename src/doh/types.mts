@@ -1,5 +1,5 @@
 import type { RecordType } from 'dns-packet';
-import { RCODE } from './doh.mts';
+import type { RCODE } from './doh.mjs';
 
 export type ExcludeUndefined<T> = T extends undefined ? never : T;
 
@@ -43,7 +43,7 @@ export interface DohRequest {
 	random_padding?: string;
 }
 
-interface ResponseValues {
+export interface ResponseValues {
 	/**
 	 * FQDN with trailing dot
 	 */

@@ -1,6 +1,11 @@
+import type { createHash } from 'node:crypto';
+import type { DohRequest } from '../doh/types.mjs';
 import type { CacheType, IPBlockMode, LoggingLevel } from './config.mjs';
-import type { DohRequest } from './doh/types.js';
 import type { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
+
+export type RecursivePartial<T> = {
+	[P in keyof T]?: T[P] extends Array<infer U> ? Array<RecursivePartial<U>> : T[P] extends object ? RecursivePartial<T[P]> : T[P];
+};
 
 export interface PotentialThirdPartyResponse extends Response, Record<string, any> {}
 
@@ -88,13 +93,13 @@ interface DoHServerConfig extends Pick<DohRequest, 'ct'> {
  * Combined `fetch` configuration which includes a `fetchHole` property.
  */
 export interface FetchHoleFetchConfig extends RequestInit {
-	fetchHole?: Partial<FetchHoleConfig>;
+	fetchHole?: RecursivePartial<FetchHoleConfig>;
 }
 
 interface StreamChunkEvents {
 	end: [];
 }
 
-export interface textStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: string]> {}
+export interface textStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: string] | []> {}
 
-export interface jsonStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: Record<string, any> | Record<string, any>[]]> {}
+export interface jsonStreamChunkEvents extends StreamChunkEvents, Record<string, [chunk: Record<string, any> | Record<string, any>[]] | []> {}

@@ -1,7 +1,7 @@
 import { CHECKING_DISABLED, decode, encode, type Answer, type DecodedPacket, type Packet, type Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { randomInt } from 'node:crypto';
-import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.js';
+import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.mjs';
 
 // @ts-ignore
 import { DNSSEC_OK } from 'dns-packet';

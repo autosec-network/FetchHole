@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { jsonStreamChunkEvents, textStreamChunkEvents } from './types.js';
+import type { jsonStreamChunkEvents, textStreamChunkEvents } from './types.mjs';
 
 export class TextEventStreamParser extends EventEmitter {
 	// @ts-ignore

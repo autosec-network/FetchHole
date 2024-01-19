@@ -86,7 +86,7 @@ jobs:
           # npm packages + tsconfig + value of `include` in tsconfig
           key: typescript-cache-tsc-${{ hashFiles('**/*.tsbuildinfo') }}
           enableCrossOsArchive: true
-      - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+      - uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           name: dist
           path: ${{ github.workspace }}/dist

@@ -43,6 +43,6 @@ jobs:
           results_format: sarif
           publish_results: true
       # Upload the results to GitHub's code scanning dashboard.
-      - uses: github/codeql-action/upload-sarif@b374143c1149a9115d881581d29b8390bbcbb59c # v3.22.11
+      - uses: github/codeql-action/upload-sarif@3ab4101902695724f9365a384f86c1074d94e18c # v3.24.7
         with:
           sarif_file: results.sarif

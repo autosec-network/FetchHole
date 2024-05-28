@@ -2,7 +2,7 @@
 	"editor.formatOnSave": true,
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "explicit",
-		"source.organizeImports": "explicit"
+		"source.organizeImports": "always"
 	},
 	"typescript.tsdk": "./node_modules/typescript/lib",
 	"github-actions.workflows.pinned.refresh.enabled": true,

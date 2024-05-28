@@ -67,7 +67,7 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+      - uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: |
             .tsbuildinfo
@@ -78,7 +78,7 @@ jobs:
             typescript-cache-tsc-
           enableCrossOsArchive: true
       - run: npm run build
-      - uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: |
             .tsbuildinfo
@@ -86,7 +86,7 @@ jobs:
           # npm packages + tsconfig + value of `include` in tsconfig
           key: typescript-cache-tsc-${{ hashFiles('**/*.tsbuildinfo') }}
           enableCrossOsArchive: true
-      - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: dist
           path: ${{ github.workspace }}/dist
@@ -139,7 +139,7 @@ jobs:
       #     path: test-output.xml
       #     reporter: 'jest-junit'
       #     max-annotations: 50
-      - uses: test-summary/action@fee35d7df20790255fe6aa92cf0f6d28092ecf2f # v2.2
+      - uses: test-summary/action@032c8a9cec6aaa3c20228112cae6ca10a3b29336 # v2.3
         if: always()
         with:
           paths: |

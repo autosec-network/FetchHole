@@ -29,8 +29,7 @@ permissions:
 
 jobs:
   MSDO:
-    # currently only windows latest is supported
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read

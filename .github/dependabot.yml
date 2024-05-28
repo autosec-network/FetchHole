@@ -43,6 +43,7 @@ updates:
     directory: '/'
     schedule:
       interval: 'daily'
+    versioning-strategy: increase
     open-pull-requests-limit: 999
     target-branch: 'beta'
     ignore:
@@ -66,6 +67,7 @@ updates:
     directory: '/'
     schedule:
       interval: 'daily'
+    versioning-strategy: increase
     open-pull-requests-limit: 999
     target-branch: 'nightly'
     ignore:

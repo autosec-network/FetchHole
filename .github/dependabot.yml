@@ -50,7 +50,11 @@ updates:
       - dependency-name: '*'
         update-types: ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: 'node'
-        versions: '>= 21'
+        versions:
+          - '>= 21'
+      - dependency-name: 'eslint'
+        versions:
+          - '>= 9.0.0'
     groups:
       typescript-core:
         patterns:
@@ -74,7 +78,11 @@ updates:
       - dependency-name: '*'
         update-types: ['version-update:semver-patch']
       - dependency-name: 'node'
-        versions: '>= 21'
+        versions:
+          - '>= 21'
+      - dependency-name: 'eslint'
+        versions:
+          - '>= 9.0.0'
     groups:
       typescript-core:
         patterns:
@@ -85,5 +93,8 @@ updates:
       code-management:
         patterns:
           - 'prettier'
+          - 'prettier-plugin-*'
           - '@demosjarco/prettier-config'
           - 'eslint'
+          - 'eslint-plugin-*'
+          - '@typescript-eslint/*'

@@ -12,15 +12,19 @@
 		},
 		{
 			"label": "build",
-			"detail": "tsc --watch",
-			"type": "npm",
-			"script": "build:watch",
+			"type": "typescript",
+			"tsconfig": "tsconfig.json",
+			"option": "watch",
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
 			"presentation": {
 				"group": "build"
 			},
-			"problemMatcher": "$tsc-watch",
-			"isBackground": true
-		},
+			"icon": {
+				"id": "symbol-type-parameter",
+				"color": "terminal.ansiBlue"
+			}
+		}
 		{
 			"label": "TS Test",
 			"dependsOn": ["doh", "fetch", "memoryCache"],

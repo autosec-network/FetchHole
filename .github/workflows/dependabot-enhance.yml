@@ -24,24 +24,3 @@ jobs:
       - run: gh pr edit "${{ github.event.pull_request.html_url }}" --add-label "${{ steps.dependabot-metadata-update-type.outputs.SEMVER_UPDATE }}"
         env:
           GH_TOKEN: ${{ github.token }}
-  automate:
-    runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
-        with:
-          disable-sudo: true
-          egress-policy: audit
-      - uses: dependabot/fetch-metadata@5e5f99653a5b510e8555840e80cbf1514ad4af38 # v2.1.0
-        id: dependabot-metadata
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - run: gh pr checkout "${{ github.event.pull_request.html_url }}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - run: gh pr review --approve "${{ github.event.pull_request.html_url }}"
-        if: steps.dependabot-metadata.outputs.dependency-group == 'typescript-types' || steps.dependabot-metadata.outputs.dependency-group == 'code-management'
-        env:
-          GH_TOKEN: ${{ github.token }}

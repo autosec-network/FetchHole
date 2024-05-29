@@ -1,7 +1,7 @@
 import type { Answer, DecodedPacket, Packet, Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
 import { Helpers } from '../helpers.mjs';
-import * as dnsPacket from './dns-packet/index.cjs';
+import * as dnsPacket from './dns-packet/index.mjs';
 import { Rcodes } from './dns-packet/rcodes.mjs';
 import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.mjs';
 

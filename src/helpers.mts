@@ -16,4 +16,18 @@ export class Helpers {
 	public static getHash(algorithm: 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512', input: string | ArrayBufferLike) {
 		return crypto.subtle.digest(algorithm, typeof input === 'string' ? new TextEncoder().encode(input) : input).then((hashBuffer) => this.bufferToHex(hashBuffer));
 	}
+
+	public static getRandomInt(min: number, max: number) {
+		if (max <= min) {
+			throw new Error('Max must be greater than min');
+		}
+
+		// The +1 is added to max in the randomInt call because the upper bound is exclusive
+		const range = max - min + 1;
+		const randomBuffer = new Uint32Array(1);
+
+		crypto.getRandomValues(randomBuffer);
+		const randomValue = randomBuffer[0]! % range;
+		return min + randomValue;
+	}
 }

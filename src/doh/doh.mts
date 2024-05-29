@@ -1,6 +1,6 @@
 import type { Answer, DecodedPacket, Packet, Question } from 'dns-packet';
 import { Buffer } from 'node:buffer';
-import { randomInt } from 'node:crypto';
+import { Helpers } from '../helpers.mjs';
 import * as dnsPacket from './dns-packet/index.cjs';
 import { Rcodes } from './dns-packet/rcodes.mjs';
 import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.mjs';
@@ -29,19 +29,6 @@ export class DohResolver {
 		let reversed = expanded.split('').reverse().join(''); // Reverse the string
 		let dotted = reversed.split('').join('.'); // Insert dots
 		return dotted + '.ip6.arpa'; // Append suffix
-	}
-
-	private getRandomInt(min: number, max: number) {
-		return new Promise<number>((resolve, reject) =>
-			// The +1 is added to max in the randomInt call because the upper bound is exclusive
-			randomInt(min, max + 1, (err, value) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(value);
-				}
-			}),
-		);
 	}
 
 	// @ts-ignore
@@ -73,7 +60,7 @@ export class DohResolver {
 				}
 
 				if (parameters.random_padding) {
-					question.id = await this.getRandomInt(1, 65534);
+					question.id = Helpers.getRandomInt(1, 65534);
 				}
 
 				const response = await this.sendDohMsg('POST', parameters.ct, timeout, this.nameserver_url, dnsPacket.encode(question));

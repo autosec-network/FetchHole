@@ -126,7 +126,6 @@ export class FetchHole {
 			// Define the headers we are interested in checking
 			const headerChecks = ['Content-Length', 'ETag'];
 			// Only run if any of the headers are missing
-			if (headerChecks.every((header) => response.headers.has(header))) {
 				// Split the body stream into two so we can read from one without consuming the other
 				const [body1, body2] = response.body.tee();
 
@@ -146,6 +145,7 @@ export class FetchHole {
 						hash!.update(Buffer.from(chunk));
 					}
 				}
+			if (Object.keys(Object.fromEntries(response.headers.entries())).some((header) => headerChecks.includes(header))) {
 
 				if (!response.headers.has('Content-Length')) {
 					response.headers.set('Content-Length', length.toString());

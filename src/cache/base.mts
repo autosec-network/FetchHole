@@ -1,7 +1,6 @@
-import { Buffer } from 'node:buffer';
-import { createHash } from 'node:crypto';
 import { configForCall } from '../fetch/config.mjs';
 import type { FetchHoleConfig, RecursivePartial } from '../fetch/types.mjs';
+import { Helpers } from '../helpers.mjs';
 
 export abstract class CacheBase {
 	protected config: FetchHoleConfig;
@@ -26,16 +25,11 @@ export abstract class CacheBase {
 		return true;
 	}
 
-	protected async hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof createHash>[0] = this.config.cache.hashAlgorithm) {
-		const hash = createHash(hashAlgorithm);
-
-		if (request.body) {
-			for await (const chunk of request.clone().body as any as AsyncIterable<Uint8Array | undefined>) {
-				hash.update(Buffer.from(chunk ?? ''));
-			}
-		}
-
-		return hash.digest('hex');
+	protected hashBody(request: Request | Response, hashAlgorithm: Parameters<typeof Helpers.getHash>[0] = this.config.cache.hashAlgorithm) {
+		return request
+			.clone()
+			.arrayBuffer()
+			.then((body) => Helpers.getHash(hashAlgorithm, body));
 	}
 
 	protected async areFetchesEqual(cachedFetch: Request | Response, newFetch: Request | Response, config: FetchHoleConfig = this.config): Promise<boolean> {

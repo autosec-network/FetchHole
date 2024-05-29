@@ -1,5 +1,5 @@
-import type { createHash } from 'node:crypto';
 import type { DohRequest } from '../doh/types.mjs';
+import type { Helpers } from '../helpers.mjs';
 import type { CacheType, IPBlockMode, LoggingLevel } from './config.mjs';
 import type { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 
@@ -73,7 +73,7 @@ interface CacheSettings extends Required<CacheQueryOptions> {
 	 * @see `openssl list -digest-algorithms`
 	 * @default 'sha256'
 	 */
-	hashAlgorithm: Parameters<typeof createHash>[0];
+	hashAlgorithm: Parameters<typeof Helpers.getHash>[0];
 }
 interface DoHServerConfig extends Pick<DohRequest, 'ct'> {
 	provider: URL | `https://${string}`;

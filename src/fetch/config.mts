@@ -82,7 +82,7 @@ export enum LoggingLevel {
 export const defaultConfig = {
 	cache: {
 		type: CacheType.Default,
-		hashAlgorithm: 'sha256',
+		hashAlgorithm: 'SHA-256',
 		ignoreMethod: false,
 		ignoreSearch: false,
 		ignoreVary: false,

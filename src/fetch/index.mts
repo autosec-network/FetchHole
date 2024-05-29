@@ -1,7 +1,6 @@
 import { Chalk } from 'chalk';
-import { Buffer } from 'node:buffer';
-import { createHash } from 'node:crypto';
 import { MemoryCache } from '../cache/memoryCache.mjs';
+import { Helpers } from '../helpers.mjs';
 import { CacheType, LoggingLevel, configForCall } from './config.mjs';
 import { JsonEventStreamParser, TextEventStreamParser } from './eventStreamParser.mjs';
 import { dropAuthRedirect, modifyRedirectRequest, responseTainted } from './extras.mjs';
@@ -130,11 +129,11 @@ export class FetchHole {
 				const tempBody = await response.clone().arrayBuffer();
 
 				if (!response.headers.has('Content-Length')) {
-					response.headers.set('Content-Length', length.toString());
+					response.headers.set('Content-Length', tempBody.byteLength.toString());
 				}
 
 				if (!response.headers.has('ETag')) {
-					response.headers.set('ETag', hash!.digest('hex'));
+					response.headers.set('ETag', await Helpers.getHash(config.cache.hashAlgorithm, tempBody));
 				}
 
 				response = new Response(response.body, response);

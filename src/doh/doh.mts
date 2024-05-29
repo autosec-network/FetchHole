@@ -1,8 +1,9 @@
-import type { Answer, DecodedPacket, Packet, Question } from 'dns-packet';
-import { Helpers } from '../helpers.mjs';
-import * as dnsPacket from './dns-packet/index.mjs';
-import { Rcodes } from './dns-packet/rcodes.mjs';
-import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined, ResponseValues } from './types.mjs';
+import type { DohErrorResponse, DohRequest, DohSuccessfulResponse, ExcludeUndefined } from './types.mjs';
+
+// @ts-expect-error
+import { DOHClient } from 'dns2';
+// @ts-expect-error
+import type { Packet } from 'dns2/packet.js';
 
 export class DohResolver {
 	private nameserver_url: URL;
@@ -42,31 +43,21 @@ export class DohResolver {
 
 		switch (parameters.ct) {
 			case 'application/dns-message': {
-				const question: Packet = {
-					type: 'query',
-					flags: 0,
-					questions: [
-						{
-							type: parameters.type || 'A',
-							name: parameters.name,
-						},
-					],
-				};
-
-				if (question.flags) {
-					if ('cd' in parameters && Boolean(parameters.cd)) question.flags |= dnsPacket.CHECKING_DISABLED;
-					if ('do' in parameters && Boolean(parameters.do)) question.flags |= dnsPacket.DNSSEC_OK;
-				}
-
-				if (parameters.random_padding) {
-					question.id = Helpers.getRandomInt(1, 65534);
-				}
-
-				const response = await this.sendDohMsg('POST', parameters.ct, timeout, this.nameserver_url, dnsPacket.encode(question));
-				return this.parseDnsMessage(dnsPacket.decode(await response.arrayBuffer()) as DecodedPacket);
+				const response = (await DOHClient({
+					dns: this.nameserver_url.host,
+					get: (url: string) =>
+						fetch(url, {
+							headers: {
+								// https://github.com/song940/node-dns/blob/master/client/doh.js#L5
+								accept: 'application/dns-message',
+							},
+						}).then((response) => response.body),
+				})(parameters.name)) as Packet;
+				console.log(response.answers);
+				return response;
 			}
 			case 'application/dns-json': {
-				const response = await this.sendDohMsg('GET', parameters.ct, timeout, this.makeJsonGetQuery(this.nameserver_url, parameters));
+				const response = await this.sendDohJson('GET', parameters.ct, timeout, this.makeJsonGetQuery(this.nameserver_url, parameters));
 				return response.json();
 			}
 		}
@@ -82,38 +73,7 @@ export class DohResolver {
 		return url;
 	}
 
-	private mapResponseValues(record: Answer | Question): ResponseValues {
-		return {
-			name: record.name,
-			type: record.type,
-			// @ts-ignore
-			TTL: record.TTL ?? 0,
-			// @ts-ignore
-			data: record.data ?? '',
-		};
-	}
-
-	private parseDnsMessage(packet: DecodedPacket): DohSuccessfulResponse {
-		return {
-			// @ts-ignore
-			Status: typeof packet.rcode === 'string' ? Rcodes.toRcode(packet.rcode) : packet.rcode,
-			TC: packet.flag_tc,
-			RD: packet.flag_rd,
-			RA: packet.flag_ra,
-			AD: packet.flag_ad,
-			CD: packet.flag_cd,
-			Question:
-				packet.questions?.map((question) => ({
-					name: question.name,
-					type: question.type,
-				})) ?? [],
-			Answer: packet.answers?.map((answer) => this.mapResponseValues(answer)) ?? [],
-			Authority: packet.authorities?.map((authority) => this.mapResponseValues(authority)) ?? [],
-			Additional: packet.additionals?.map((additional) => this.mapResponseValues(additional)) ?? [],
-		};
-	}
-
-	private async sendDohMsg(method: 'GET' | 'POST', ct: ExcludeUndefined<DohRequest['ct']>, timeout: number, url: URL, body?: ArrayBufferLike): Promise<Response> {
+	private async sendDohJson(method: 'GET' | 'POST', ct: ExcludeUndefined<DohRequest['ct']>, timeout: number, url: URL, body?: ArrayBufferLike): Promise<Response> {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort(), timeout);
 

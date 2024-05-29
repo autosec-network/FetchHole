@@ -1,5 +1,5 @@
-import type { RecordType } from 'dns-packet';
-import type { Rcode } from './dns-packet/rcodes.mjs';
+// @ts-expect-error
+import type { Packet } from 'dns2/packet.js';
 
 export type ExcludeUndefined<T> = T extends undefined ? never : T;
 
@@ -12,7 +12,7 @@ export interface DohRequest {
 	 * RR type can be represented as a canonical string. You can use 'ANY' queries but be aware that this is not a replacement for sending queries for both A and AAAA or MX records. Authoritative name servers need not return all records for such queries; some do not respond, and others (such as cloudflare.com) return only HINFO.
 	 * @default `A`
 	 */
-	type?: RecordType;
+	type?: Packet.TYPE;
 	/**
 	 * The CD (Checking Disabled) flag. Use cd=1, or cd=true to disable DNSSEC validation; use cd=0, cd=false, or no cd parameter to enable DNSSEC validation.
 	 * @default false
@@ -67,7 +67,7 @@ export interface DohSuccessfulResponse extends Record<string, any> {
 	/**
 	 * The Response Code of the DNS Query. Defined here: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
 	 */
-	Status: Rcode;
+	Status: number;
 	/**
 	 * Whether the response is truncated. This happens when the DNS answer is larger than a single UDP or TCP packet
 	 */

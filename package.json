@@ -44,7 +44,7 @@
 	},
 	"prettier": "@demosjarco/prettier-config",
 	"dependencies": {
-		"@leichtgewicht/ip-codec": "^2.0.4",
+		"@leichtgewicht/ip-codec": "^2.0.5",
 		"chalk": "^5.3.0"
 	},
 	"devDependencies": {

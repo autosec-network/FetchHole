@@ -1,5 +1,4 @@
 import type { Answer, DecodedPacket, Packet, Question } from 'dns-packet';
-import { Buffer } from 'node:buffer';
 import { Helpers } from '../helpers.mjs';
 import * as dnsPacket from './dns-packet/index.mjs';
 import { Rcodes } from './dns-packet/rcodes.mjs';
@@ -64,7 +63,7 @@ export class DohResolver {
 				}
 
 				const response = await this.sendDohMsg('POST', parameters.ct, timeout, this.nameserver_url, dnsPacket.encode(question));
-				return this.parseDnsMessage(dnsPacket.decode(Buffer.from(await response.arrayBuffer())) as DecodedPacket);
+				return this.parseDnsMessage(dnsPacket.decode(await response.arrayBuffer()) as DecodedPacket);
 			}
 			case 'application/dns-json': {
 				const response = await this.sendDohMsg('GET', parameters.ct, timeout, this.makeJsonGetQuery(this.nameserver_url, parameters));
@@ -114,7 +113,7 @@ export class DohResolver {
 		};
 	}
 
-	private async sendDohMsg(method: 'GET' | 'POST', ct: ExcludeUndefined<DohRequest['ct']>, timeout: number, url: URL, body?: Buffer): Promise<Response> {
+	private async sendDohMsg(method: 'GET' | 'POST', ct: ExcludeUndefined<DohRequest['ct']>, timeout: number, url: URL, body?: ArrayBufferLike): Promise<Response> {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort(), timeout);
 

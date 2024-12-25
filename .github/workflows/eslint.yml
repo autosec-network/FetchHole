@@ -86,7 +86,7 @@ jobs:
           sarif_file: eslint-results.sarif
         continue-on-error: true
         # https://microsoft.github.io/sarif-web-component/
-      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
         if: ${{ steps.g_cql_upload.outcome == 'failure' }}
         with:
           path: eslint-results.sarif

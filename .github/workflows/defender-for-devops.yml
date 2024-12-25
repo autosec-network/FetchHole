@@ -41,7 +41,7 @@ jobs:
           node-version: lts/*
           check-latest: true
           cache: npm
-      - uses: microsoft/security-devops-action@7e3060ae1e6a9347dd7de6b28195099f39852fe2 # v1.10.0
+      - uses: microsoft/security-devops-action@08976cb623803b1b36d7112d4ff9f59eae704de0 # v1.12.0
         id: msdo
       - uses: github/codeql-action/upload-sarif@9fdb3e49720b44c48891d036bb502feb25684276 # v3.25.6
         with:

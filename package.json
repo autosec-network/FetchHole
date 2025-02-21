@@ -48,7 +48,7 @@
 		"chalk": "^5.3.0"
 	},
 	"devDependencies": {
-		"@demosjarco/prettier-config": "^1.0.1",
+		"@demosjarco/prettier-config": "^1.0.2",
 		"@swc/core": "^1.5.7",
 		"@types/dns-packet": "^5.6.5",
 		"@types/eslint": "^8.56.10",

@@ -67,7 +67,7 @@ jobs:
           check-latest: true
           cache: npm
       - run: npm ci
-      - uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: |
             .tsbuildinfo
@@ -78,7 +78,7 @@ jobs:
             typescript-cache-tsc-
           enableCrossOsArchive: true
       - run: npm run build
-      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache/save@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: |
             .tsbuildinfo
